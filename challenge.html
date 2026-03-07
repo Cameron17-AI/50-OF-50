@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>50 of 50 Runner</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <script>
+    // Check if user is logged in
+    const currentUser = JSON.parse(localStorage.getItem('50of50_currentUser'));
+    if (!currentUser) {
+      window.location.href = 'signin.html';
+    }
+  </script>
+  <main class="wrap">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+      <h1>50 of 50</h1>
+      <div style="display: flex; gap: 8px;">
+        <button onclick="window.location.href='index.html'" style="padding: 8px 16px; background: #666; color: #fff; border: 0; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 13px;">Home</button>
+        <button id="backBtn" style="padding: 8px 16px; background: #666; color: #fff; border: 0; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 13px;">Back to Records</button>
+      </div>
+    </div>
+
+    <div class="main-content">
+
+      <div class="left-section">
+        <div class="video-flex-row">
+          <div class="buttons-section">
+            <div class="buttons">
+              <button id="startBtn">Start</button>
+              <button id="doneBtn" disabled>Complete Movement</button>
+              <button id="resetBtn" disabled>Reset</button>
+            </div>
+          </div>
+          <div class="video-main">
+            <div class="video-counter" id="videoCounter" style="height:0;overflow:hidden;padding:0;margin:0;border:0;">1 of 50</div>
+            <div class="video-container" id="videoContainer">
+              <video id="movementVideo" loop playsinline muted></video>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <section class="card">
+        <div class="meta" id="progress">Ready</div>
+        <h2 id="movementName">Press Start</h2>
+        <p id="movementReps"></p>
+        <p id="movementDesc"></p>
+        <div class="timer" id="timer">00:00:00</div>
+        <button id="quitBtn" style="display:block;margin:18px auto 0 auto;padding:14px 32px;background:#c00;color:#fff;font-size:1.2em;font-weight:bold;border:none;border-radius:8px;box-shadow:0 2px 8px #0003;cursor:pointer;letter-spacing:1px;">I'm done QUIT</button>
+      </section>
+    </div>
+
+    <div id="finish" class="finish hidden"></div>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Don't Quit!</title>
+  <style>
+    html, body {
+      margin: 0; padding: 0; height: 100%; width: 100%; background: #000; color: #fff; }
+    body { display: flex; align-items: center; justify-content: center; height: 100vh; width: 100vw; }
+    #overlay {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.7); z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+    #dontquit-video {
+      width: 90vw; max-width: 600px; border-radius: 16px; box-shadow: 0 4px 32px #000a; margin-bottom: 32px;
+    }
+    .quit-btn, .back-btn {
+      font-size: 1.3em; padding: 16px 32px; border: none; border-radius: 8px; margin: 12px; font-weight: bold; cursor: pointer; }
+    .quit-btn { background: #c00; color: #fff; }
+    .back-btn { background: #0c0; color: #fff; }
+    .msg { font-size: 2em; font-weight: bold; margin-bottom: 24px; text-align: center; }
+  </style>
+</head>
+<body>
+  <div id="overlay">
+    <div class="msg">DON'T QUIT<br>KEEP GOING</div>
+    <video id="dontquit-video" src="assets/videos/dontquit.mp4" autoplay loop muted playsinline></video>
+    <div>
+      <button class="back-btn" id="backToChallenge">Back to Challenge</button>
+      <button class="quit-btn" id="quitForReal">Quit for Real</button>
+    </div>
+  </div>
+  <script>
+    document.getElementById('backToChallenge').onclick = function() {
+      // Go back to challenge page and resume state
+      window.location.href = 'challenge.html';
+    };
+    document.getElementById('quitForReal').onclick = function() {
+      // Save quit progress to results
+      try {
+        const idx = Number(sessionStorage.getItem('50of50_quit_idx'));
+        const currentUser = JSON.parse(localStorage.getItem('50of50_currentUser'));
+        let results = JSON.parse(localStorage.getItem('50of50_results')) || [];
+        if (currentUser && !isNaN(idx)) {
+          results.push({
+            userId: currentUser.id,
+            name: currentUser.name,
+            sex: currentUser.sex,
+            age: currentUser.age,
+            city: currentUser.city,
+            finishTime: Date.now() - (window.startTime || Date.now()),
+            completedAt: new Date().toISOString(),
+            lastIdx: idx
+          });
+          localStorage.setItem('50of50_results', JSON.stringify(results));
+        }
+      } catch(e) {}
+      window.location.href = 'records.html?quit=1';
+    };
+  </script>
+</body>
+</html>

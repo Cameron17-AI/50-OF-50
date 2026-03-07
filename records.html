@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Global Records - 50 of 50</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .records-container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+    .records-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    .records-header h1 {
+      margin: 0;
+      font-size: 32px;
+    }
+    .btn-logout {
+      padding: 10px 16px;
+      background: #FF5252;
+      color: #fff;
+      border: 0;
+      border-radius: 8px;
+      font-weight: 800;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .btn-compete {
+      padding: 12px 20px;
+      background: #4CAF50;
+      color: #fff;
+      border: 0;
+      border-radius: 8px;
+      font-weight: 800;
+      cursor: pointer;
+      font-size: 14px;
+      margin-bottom: 24px;
+    }
+    .btn-compete:hover {
+      background: #45a049;
+    }
+    .filters {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    .filters select {
+      padding: 10px 12px;
+      border: 1px solid #333;
+      border-radius: 8px;
+      background: #161616;
+      color: #fff;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .records-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .records-table thead {
+      background: #161616;
+    }
+    .records-table th {
+      padding: 12px;
+      text-align: left;
+      font-weight: 800;
+      border-bottom: 2px solid #333;
+    }
+    .records-table td {
+      padding: 12px;
+      border-bottom: 1px solid #222;
+    }
+    .records-table tbody tr:hover {
+      background: #0f0f0f;
+    }
+    .records-table tbody tr.current-user {
+      background: #1a3a1a;
+    }
+    .rank {
+      font-weight: 800;
+      color: #4CAF50;
+      min-width: 30px;
+    }
+    .no-records {
+      text-align: center;
+      padding: 40px 20px;
+      opacity: 0.6;
+    }
+    .user-info {
+      font-size: 12px;
+      opacity: 0.7;
+    }
+  </style>
+</head>
+<body>
+  <div class="records-container">
+    <div class="records-header">
+      <h1>Global Records</h1>
+      <div style="display: flex; gap: 8px;">
+        <button class="btn-logout" onclick="window.location.href='index.html'" style="background: #666;">Home</button>
+        <button class="btn-logout" id="logoutBtn" onclick="logout()" style="display:none;">Logout</button>
+      </div>
+    </div>
+
+    <button class="btn-compete" id="competeBtn" style="display:none;">Start Challenge</button>
+
+    <div class="filters">
+      <label style="opacity: 0.6; font-size: 13px;">Filter by:</label>
+      <select id="sexFilter" onchange="updateTable()">
+        <option value="">All Sexes</option>
+        <option value="male">Male</option>
+        <option value="female">Female</option>
+        <option value="other">Other</option>
+      </select>
+
+      <select id="ageFilter" onchange="updateTable()">
+        <option value="">All Ages</option>
+        <option value="13-17">13-17</option>
+        <option value="18-24">18-24</option>
+        <option value="25-34">25-34</option>
+        <option value="35-44">35-44</option>
+        <option value="45-54">45-54</option>
+        <option value="55+">55+</option>
+      </select>
+    </div>
+
+    <table class="records-table">
+      <thead>
+        <tr>
+          <th style="width: 60px;">Rank</th>
+          <th>Name</th>
+          <th>Age</th>
+          <th style="width: 100px;">Sex</th>
+          <th>City</th>
+          <th style="width: 120px;">Time</th>
+          <th style="width: 180px;">Last Movement Completed</th>
+        </tr>
+      </thead>
+      <tbody id="recordsBody">
+        <tr class="no-records"><td colspan="6">Loading records...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    function getAgeGroup(age) {
+      if (age >= 13 && age <= 17) return '13-17';
+      if (age >= 18 && age <= 24) return '18-24';
+      if (age >= 25 && age <= 34) return '25-34';
+      if (age >= 35 && age <= 44) return '35-44';
+      if (age >= 45 && age <= 54) return '45-54';
+      return '55+';
+    }
+
+    function formatTime(ms) {
+      return new Date(ms).toISOString().substr(11, 8);
+    }
+
+    function updateTable() {
+      const sexFilter = document.getElementById('sexFilter').value;
+      const ageFilter = document.getElementById('ageFilter').value;
+      const currentUser = JSON.parse(localStorage.getItem('50of50_currentUser'));
+      const results = JSON.parse(localStorage.getItem('50of50_results')) || [];
+
+      let filtered = results.filter(r => {
+        if (sexFilter && r.sex !== sexFilter) return false;
+        if (ageFilter && getAgeGroup(r.age) !== ageFilter) return false;
+        return true;
+      });
+
+      // Separate finishers and quitters
+      const finishers = filtered.filter(r => typeof r.lastIdx !== 'number' || r.lastIdx >= 49);
+      const quitters = filtered.filter(r => typeof r.lastIdx === 'number' && r.lastIdx < 49);
+      finishers.sort((a, b) => a.finishTime - b.finishTime);
+      quitters.sort((a, b) => (b.lastIdx ?? 0) - (a.lastIdx ?? 0));
+      filtered = finishers.concat(quitters);
+
+      const tbody = document.getElementById('recordsBody');
+      
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr class="no-records"><td colspan="6">No records found</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = filtered.map((record, idx) => {
+        const isCurrentUser = currentUser && record.userId === currentUser.id;
+        // Show last completed movement if available, else 'Completed All'
+        let lastMovement = 'Completed All';
+        if (typeof record.lastIdx === 'number' && record.lastIdx < 49) {
+          // Try to get movement name from challenge.json if available
+          const challenge = window.challengeList || [];
+          lastMovement = challenge[record.lastIdx]?.name ? `#${record.lastIdx+1} - ${challenge[record.lastIdx].name}` : `#${record.lastIdx+1}`;
+        }
+        return `<tr class="${isCurrentUser ? 'current-user' : ''}">
+          <td class="rank">#${idx + 1}</td>
+          <td><strong>${record.name}</strong></td>
+          <td>${record.age}</td>
+          <td>${record.sex}</td>
+          <td>${record.city}</td>
+          <td><strong>${formatTime(record.finishTime)}</strong></td>
+          <td>${lastMovement}</td>
+        </tr>`;
+      }).join('');
+      // Load challenge.json for movement names
+      fetch('challenge.json').then(r => r.json()).then(list => { window.challengeList = list; });
+    }
+
+    function logout() {
+      localStorage.removeItem('50of50_currentUser');
+      window.location.href = 'signin.html';
+    }
+
+    // Check authentication
+    const currentUser = JSON.parse(localStorage.getItem('50of50_currentUser'));
+    if (currentUser) {
+      document.getElementById('logoutBtn').style.display = '';
+      document.getElementById('competeBtn').style.display = '';
+    }
+    // Start Challenge button: always start fresh
+    document.getElementById('competeBtn').onclick = function() {
+      sessionStorage.removeItem('50of50_quit_state');
+      sessionStorage.removeItem('50of50_quit_idx');
+      window.location.href = 'challenge.html';
+    };
+    // Load records on page load
+    updateTable();
+  </script>
+</body>
+</html>

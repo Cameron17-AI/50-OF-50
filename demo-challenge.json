@@ -1,0 +1,5 @@
+[
+  { "id": 1, "name": "Push-ups", "reps": 50, "description": "Chest lowers under control. Full lockout at top.", "lockTime": 0, "video": "assets/videos/no.1pushup.mp4" },
+  { "id": 2, "name": "Glute bridges", "reps": 50, "description": "Heels down. Hips fully extended at top.", "lockTime": 0, "video": "assets/videos/no.4glutebridges.mp4" },
+  { "id": 3, "name": "Air squats", "reps": 50, "description": "Hip crease below knee. Full extension at top.", "lockTime": 0, "video": "assets/videos/no.3airsquats.mp4" }
+]

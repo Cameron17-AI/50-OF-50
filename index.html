@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>50 of 50</title>
+  <link rel="stylesheet" href="home.css" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <script>
+    // Check if user is logged in and show appropriate button
+    function getRunnerLink() {
+      const currentUser = JSON.parse(localStorage.getItem('50of50_currentUser'));
+      return currentUser ? 'challenge.html' : 'signin.html';
+    }
+  </script>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="topbar">
+    <div class="container topbar__inner">
+      <div class="brand">
+        <div class="brand__mark">50</div>
+        <div class="brand__text">
+          <div class="brand__title">50 of 50</div>
+          <div class="brand__tag">Bodyweight endurance challenge</div>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <a href="#about">About</a>
+        <a href="#how">How it works</a>
+        <a href="movements.html">Movement list</a>
+        <a href="rules.html">Rules</a>
+        <a href="#contact">Contact</a>
+        <span id="authButtons"></span>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero hero--brand">
+      <div class="hero__bg" aria-hidden="true"></div>
+      <div class="container hero__inner hero__brand-inner">
+        <div class="brand-hero">
+          <div class="brand-hero__mark">50</div>
+          <div class="brand-hero__text">
+            <div class="brand-hero__title">50 of 50</div>
+            <div class="brand-hero__subtitle">Bodyweight Endurance Challenge</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="hero">
+      <div class="hero__bg" aria-hidden="true"></div>
+      <div class="container hero__inner">
+        <p class="pill">Competition open now</p>
+        <h1><strong>EARN YOUR RIGHT</strong></h1>
+        <div style="margin-bottom: 12px; text-align: center;">
+          <span class="competition-highlight">2026 Competition</span>
+        </div>
+        <p class="hero__sub">
+          <span class="hero__sub--highlight">Test yourself versus the BEST</span><br>
+          50 exercises. 50 reps each. One locked order. Global rankings by age & sex.
+        </p>
+
+        <div class="hero__cta">
+          <a class="btn btn--primary" id="heroRunnerBtn" href="signin.html">Try the runner</a>
+          <a class="btn btn--accent" href="demo.html">Demo (3 movements)</a>
+          <a class="btn btn--ghost" href="#movements-preview">See Movements</a>
+          <a class="btn btn--accent" href="records.html">Global Records</a>
+        </div>
+
+        <div class="hero__note">
+          Founder attempt planned for <strong>17 June</strong> (built with my 50th birthday in mind).
+        </div>
+      </div>
+    </section>
+
+    <section id="movements-preview" class="section section--dark">
+      <div class="container">
+        <h2>Sample Movements</h2>
+        <p style="color: rgba(233, 238, 245, 0.7); margin-bottom: 32px; max-width: 680px;">
+          Here's a preview of what you'll face. Each movement requires 50 reps completed to perfection before moving to the next. The full challenge has 50 unique movements.
+        </p>
+        
+        <div class="movements-grid">
+          <div class="movement-card">
+            <div class="movement-card__icon">💪</div>
+            <div class="movement-card__name">Push-ups</div>
+            <div class="movement-card__reps">50 reps</div>
+            <div class="movement-card__details">Chest lowers under control. Full lockout at top.</div>
+          </div>
+          <div class="movement-card">
+            <div class="movement-card__icon">🚴</div>
+            <div class="movement-card__name">Air Squats</div>
+            <div class="movement-card__reps">50 reps</div>
+            <div class="movement-card__details">Hip crease below knee. Full extension at top.</div>
+          </div>
+          <div class="movement-card">
+            <div class="movement-card__icon">🫶</div>
+            <div class="movement-card__name">Glute Bridges</div>
+            <div class="movement-card__reps">50 reps</div>
+            <div class="movement-card__details">Heels down. Hips fully extended at top.</div>
+          </div>
+          <div class="movement-card">
+            <div class="movement-card__icon">🔄</div>
+            <div class="movement-card__name">Russian Twists</div>
+            <div class="movement-card__reps">50 reps</div>
+            <div class="movement-card__details">25 reps per side. Torso controlled throughout.</div>
+          </div>
+          <div class="movement-card">
+            <div class="movement-card__icon">🏃</div>
+            <div class="movement-card__name">Mountain Climbers</div>
+            <div class="movement-card__reps">50 reps</div>
+            <div class="movement-card__details">25 reps per side. Knee drives toward chest under control.</div>
+          </div>
+          <div class="movement-card">
+            <div class="movement-card__icon">⬆️</div>
+            <div class="movement-card__name">Burpees</div>
+            <div class="movement-card__reps">50 reps</div>
+            <div class="movement-card__details">Chest to ground. Finish standing tall. Final movement.</div>
+          </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 40px;">
+          <p class="movements-list-highlight">See the full list</p>
+          <a href="movements.html" class="btn btn--ghost movements-list-highlight">View Full List</a>
+        </div>
+      </div>
+    </section>
+
+    <section id="about" class="section">
+      <div class="container grid2">
+        <div class="card">
+          <h2>What is 50 of 50?</h2>
+          <div style="font-size:1.3em; font-weight:bold; color:#c00; margin-bottom:8px; letter-spacing:1px;">CAN YOU FINISH</div>
+          <p>
+            A solo bodyweight endurance challenge. No machines, no weights, no shortcuts.
+            You pace yourself, earn every rep, and finish strong.
+          </p>
+          <ul class="list">
+            <li>50 reps per exercise</li>
+            <li>50 unique exercises</li>
+            <li>Order is locked</li>
+            <li>Rest allowed at any time</li>
+          </ul>
+
+          <div class="mini">
+            <div class="mini__item">
+              <div class="mini__k">Equipment</div>
+              <div class="mini__v">Bodyweight + one bench/chair</div>
+            </div>
+            <div class="mini__item">
+              <div class="mini__k">Surface</div>
+              <div class="mini__v">Flat ground</div>
+            </div>
+            <div class="mini__item">
+              <div class="mini__k">Goal</div>
+              <div class="mini__v">Finish the full list</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mediaCard">
+          <img src="assets/option3-hero.png" alt="Athlete training on the floor" />
+          <div class="mediaCard__overlay">
+            <div class="mediaCard__title">Train it now</div>
+            <div class="mediaCard__sub">Practice the sequence. Improve your time.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="how" class="section section--dark">
+      <div class="how-bg" aria-hidden="true"></div>
+      <div class="container">
+        <h2>How it works</h2>
+        <div class="steps">
+          <div class="step">
+            <div class="step__num">1</div>
+            <div class="step__body">
+              <h3>Start your attempt</h3>
+              <p>Open the runner and begin the clock.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step__num">2</div>
+            <div class="step__body">
+              <h3>Complete each movement</h3>
+              <p>Hit all 50 reps before moving on. Break reps into sets if needed.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step__num">3</div>
+            <div class="step__body">
+              <h3>Finish with burpees</h3>
+              <p>Burpees are always last. Finish standing tall.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout" style="font-weight:bold; font-size:1.35em; color:#222; background:tan; border-radius:12px; box-shadow:0 2px 12px #0006; padding:24px 18px; text-align:center; letter-spacing:1px; text-transform:uppercase;">
+          <span class="how-good-title">HOW GOOD ARE YOU?</span>
+          <span style="font-style:italic; display:block; margin-bottom:2px; font-size:0.95em;">CHALLENGE YOURSELF! CHALLENGE THE WORLD!<br>
+          SET A TIME FOR THE WORLD TO BEAT!</span>
+          <span style="font-size:1.5em; color:#ff0; text-shadow:0 2px 8px #000;">CAN YOU EVEN FINISH?</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="gallery" class="section">
+      <div class="gallery-bg" aria-hidden="true"></div>
+      <div class="container">
+        <h2>Gallery</h2>
+        <p class="muted">Swap these images for your own. Put files in <code>assets/</code>.</p>
+
+        <div class="gallery">
+          <!-- Training images removed, background remains -->
+        </div>
+      </div>
+    </section>
+
+    <section id="contact" class="section section--dark">
+      <div class="container grid2">
+        <div class="card card--flat">
+          <h2>Contact</h2>
+          <p class="muted">
+            Have a question, suggestion, or want to get in touch? Fill out the form below and I'll get back to you soon!
+          </p>
+
+          <form id="contactForm" class="form">
+            <label>
+              Name
+              <input id="contactName" type="text" placeholder="Your name" required />
+            </label>
+            <label>
+              Email
+              <input id="contactEmail" type="email" placeholder="you@example.com" required />
+            </label>
+            <label>
+              Message
+              <textarea id="contactMsg" placeholder="Type your message here..." required></textarea>
+            </label>
+            <button class="btn btn--primary" type="submit">Send message</button>
+            <p id="contactStatus" class="msg" aria-live="polite"></p>
+          </form>
+        </div>
+
+        <div class="card card--flat">
+          <h2>Quick links</h2>
+          <div class="links" style="display:flex; flex-direction:column; gap:18px; align-items:center; margin-top:18px;">
+            <a class="btn btn--demo-highlight" href="challenge.html" style="width:220px;">Start CHALLENGE</a>
+            <a class="btn btn--ghost" href="movements.html" style="width:220px;">Movement list</a>
+            <a class="btn btn--ghost" href="rules.html" style="width:220px;">Rules</a>
+          </div>
+
+          <div class="fineprint">
+            Safety note: Stop immediately if you feel dizzy, numb, or sharp unexpected pain. You’re responsible for pacing and form.
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__inner">
+      <div>50 of 50</div>
+      <div class="muted">© <span id="year"></span></div>
+    </div>
+  </footer>
+
+  <script>
+    // Handle authentication buttons
+    function updateAuthButtons() {
+      const currentUser = JSON.parse(localStorage.getItem('50of50_currentUser'));
+      const authButtonsEl = document.getElementById('authButtons');
+      const heroRunnerBtn = document.getElementById('heroRunnerBtn');
+      
+      if (currentUser) {
+        authButtonsEl.innerHTML = `
+          <a class="nav__cta btn--demo-highlight" href="challenge.html">Start CHALLENGE</a>
+          <a class="nav__cta" href="records.html">Global Records</a>
+          <button onclick="logout()" style="background: none; border: none; color: inherit; cursor: pointer; text-decoration: underline; font-size: inherit;">Logout</button>
+        `;
+        heroRunnerBtn.href = 'challenge.html';
+        heroRunnerBtn.classList.add('btn--demo-highlight');
+        heroRunnerBtn.textContent = 'Start CHALLENGE';
+      } else {
+        authButtonsEl.innerHTML = `
+          <a class="nav__cta" href="signin.html">Sign In</a>
+          <a class="nav__cta" href="register.html">Register</a>
+        `;
+        heroRunnerBtn.href = 'signin.html';
+        heroRunnerBtn.textContent = 'Try the runner';
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem('50of50_currentUser');
+      updateAuthButtons();
+    }
+
+    // Update on page load
+    updateAuthButtons();
+  </script>
+
+  <script src="home.js"></script>
+</body>
+</html>

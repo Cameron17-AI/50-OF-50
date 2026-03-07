@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Register - 50 of 50</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .auth-container {
+      max-width: 400px;
+      margin: 60px auto;
+      background: #161616;
+      border-radius: 16px;
+      padding: 32px;
+    }
+    .auth-container h1 {
+      margin: 0 0 24px 0;
+      font-size: 28px;
+      text-align: center;
+    }
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 14px;
+      opacity: 0.85;
+    }
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #333;
+      border-radius: 8px;
+      background: #0b0b0b;
+      color: #fff;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #666;
+    }
+    .btn-group {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+    }
+    .btn-register {
+      flex: 1;
+      padding: 14px;
+      background: #4CAF50;
+      color: #fff;
+      border: 0;
+      border-radius: 8px;
+      font-weight: 800;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .btn-register:hover {
+      background: #45a049;
+    }
+    .btn-signin {
+      flex: 1;
+      padding: 14px;
+      background: #333;
+      color: #fff;
+      border: 0;
+      border-radius: 8px;
+      font-weight: 800;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .btn-signin:hover {
+      background: #444;
+    }
+    .error {
+      color: #ff6b6b;
+      font-size: 12px;
+      margin-top: 8px;
+    }
+    .success {
+      color: #4CAF50;
+      font-size: 12px;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-container">
+    <h1>Register</h1>
+    <form id="registerForm">
+      <div class="form-group">
+        <label for="name">Full Name</label>
+        <input type="text" id="name" name="name" required />
+      </div>
+      
+      <div class="form-group">
+        <label for="sex">Sex</label>
+        <select id="sex" name="sex" required>
+          <option value="">Select...</option>
+          <option value="male">Male</option>
+          <option value="female">Female</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label for="age">Age</label>
+        <input type="number" id="age" name="age" min="13" max="120" required />
+      </div>
+      
+      <div class="form-group">
+        <label for="city">City of Origin</label>
+        <input type="text" id="city" name="city" required />
+      </div>
+      
+      <div class="form-group">
+        <label for="email">Email (for login)</label>
+        <input type="email" id="email" name="email" required />
+      </div>
+      
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required />
+      </div>
+
+      <div id="message"></div>
+
+      <div class="btn-group">
+        <button type="submit" class="btn-register">Register</button>
+        <button type="button" class="btn-signin" onclick="window.location.href='signin.html'">Sign In</button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    document.getElementById('registerForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const name = document.getElementById('name').value;
+      const sex = document.getElementById('sex').value;
+      const age = document.getElementById('age').value;
+      const city = document.getElementById('city').value;
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      
+      // Get existing users
+      let users = JSON.parse(localStorage.getItem('50of50_users')) || [];
+      
+      // Check if email already exists
+      if (users.find(u => u.email === email)) {
+        document.getElementById('message').innerHTML = '<div class="error">Email already registered</div>';
+        return;
+      }
+      
+      // Create new user
+      const newUser = {
+        id: Date.now(),
+        name,
+        sex,
+        age: parseInt(age),
+        city,
+        email,
+        password,
+        registeredAt: new Date().toISOString()
+      };
+      
+      users.push(newUser);
+      localStorage.setItem('50of50_users', JSON.stringify(users));
+      
+      // Auto-login
+      localStorage.setItem('50of50_currentUser', JSON.stringify({ id: newUser.id, name: newUser.name, email: newUser.email, sex: newUser.sex, age: newUser.age }));
+      
+      document.getElementById('message').innerHTML = '<div class="success">Registration successful! Redirecting...</div>';
+      setTimeout(() => {
+        window.location.href = 'challenge.html';
+      }, 1500);
+    });
+  </script>
+</body>
+</html>

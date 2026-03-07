@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Try the 50 of 50 Challenge - Demo</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="wrap">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+      <h1>50 of 50 - Demo</h1>
+      <div style="display: flex; gap: 8px;">
+        <button onclick="window.location.href='index.html'" style="padding: 8px 16px; background: #666; color: #fff; border: 0; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 13px;">Home</button>
+      </div>
+    </div>
+
+    <div class="main-content">
+      <div class="left-section">
+        <div class="video-flex-row">
+          <div class="buttons-section">
+            <div class="buttons">
+              <button id="startBtn">Start Demo</button>
+              <button id="doneBtn" disabled>Complete Movement</button>
+              <button id="resetBtn" disabled>Reset</button>
+            </div>
+          </div>
+          <div class="video-main">
+            <div class="video-counter" id="videoCounter" style="height:0;overflow:hidden;padding:0;margin:0;border:0;">1 of 3</div>
+            <div class="video-container" id="videoContainer">
+              <video id="movementVideo" loop playsinline muted></video>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <section class="card">
+        <div class="meta" id="progress">Ready</div>
+        <h2 id="movementName">Press Start</h2>
+        <p id="movementReps"></p>
+        <p id="movementDesc"></p>
+        <div id="media"></div>
+        <div class="timer" id="timer">00:00:00</div>
+      </section>
+    </div>
+
+    <div id="finish" class="finish hidden"></div>
+    <div id="register-prompt" class="finish hidden" style="text-align: center; padding: 40px 20px;">
+      <div style="font-size: 32px; font-weight: 900; margin-bottom: 20px;">You've completed the demo!</div>
+      <p style="font-size: 16px; margin-bottom: 30px; opacity: 0.8;">Ready to compete and earn your right?</p>
+      <a href="register.html" style="display: inline-block; padding: 16px 32px; background: #4CAF50; color: #fff; text-decoration: none; border-radius: 8px; font-weight: 900; font-size: 16px;">Register to Compete</a>
+    </div>
+  </main>
+
+  <script src="demo.js"></script>
+</body>
+</html>
