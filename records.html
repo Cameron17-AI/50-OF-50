@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Global Records - 50 of 50</title>
   <link rel="stylesheet" href="styles.css" />
+  <script src="auth.js"></script>
   <style>
     .records-container {
       max-width: 900px;
@@ -166,7 +167,7 @@
     function updateTable() {
       const sexFilter = document.getElementById('sexFilter').value;
       const ageFilter = document.getElementById('ageFilter').value;
-      const currentUser = JSON.parse(localStorage.getItem('50of50_currentUser'));
+      const currentUser = window.authStore.getCurrentUser();
       const results = JSON.parse(localStorage.getItem('50of50_results')) || [];
 
       let filtered = results.filter(r => {
@@ -213,24 +214,29 @@
     }
 
     function logout() {
-      localStorage.removeItem('50of50_currentUser');
+      window.authStore.clearCurrentUser();
       window.location.href = 'signin.html';
     }
 
-    // Check authentication
-    const currentUser = JSON.parse(localStorage.getItem('50of50_currentUser'));
-    if (currentUser) {
-      document.getElementById('logoutBtn').style.display = '';
-      document.getElementById('competeBtn').style.display = '';
+    async function initRecordsPage() {
+      const currentUser = await window.authStore.syncChallengeAccessFromServer(window.authStore.getCurrentUser());
+
+      if (currentUser) {
+        document.getElementById('logoutBtn').style.display = '';
+        document.getElementById('competeBtn').style.display = '';
+        document.getElementById('competeBtn').textContent = window.authStore.hasChallengeAccess(currentUser) ? 'Start Challenge' : 'Unlock Challenge';
+      }
+
+      document.getElementById('competeBtn').onclick = function() {
+        sessionStorage.removeItem('50of50_quit_state');
+        sessionStorage.removeItem('50of50_quit_idx');
+        window.location.href = currentUser ? window.authStore.getChallengeEntryPath(currentUser) : 'signin.html';
+      };
+
+      updateTable();
     }
-    // Start Challenge button: always start fresh
-    document.getElementById('competeBtn').onclick = function() {
-      sessionStorage.removeItem('50of50_quit_state');
-      sessionStorage.removeItem('50of50_quit_idx');
-      window.location.href = 'challenge.html';
-    };
-    // Load records on page load
-    updateTable();
+
+    initRecordsPage();
   </script>
 </body>
 </html>

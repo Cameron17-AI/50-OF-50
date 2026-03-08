@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Sign In - 50 of 50</title>
   <link rel="stylesheet" href="styles.css" />
+  <script src="auth.js"></script>
   <style>
     .auth-container {
       max-width: 400px;
@@ -105,13 +106,13 @@
   </div>
 
   <script>
-    document.getElementById('signinForm').addEventListener('submit', function(e) {
+    document.getElementById('signinForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
       
-      const users = JSON.parse(localStorage.getItem('50of50_users')) || [];
+      const users = window.authStore.getUsers();
       const user = users.find(u => u.email === email && u.password === password);
       
       if (!user) {
@@ -119,10 +120,10 @@
         return;
       }
       
-      // Store current user session
-      localStorage.setItem('50of50_currentUser', JSON.stringify({ id: user.id, name: user.name, email: user.email, sex: user.sex, age: user.age }));
+      window.authStore.setCurrentUser(user);
+      const syncedUser = await window.authStore.syncChallengeAccessFromServer(user);
       
-      window.location.href = 'challenge.html';
+      window.location.href = window.authStore.getChallengeEntryPath(syncedUser || user);
     });
   </script>
 </body>

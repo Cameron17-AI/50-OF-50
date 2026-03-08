@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Register - 50 of 50</title>
   <link rel="stylesheet" href="styles.css" />
+  <script src="auth.js"></script>
   <style>
     .auth-container {
       max-width: 400px;
@@ -147,16 +148,13 @@
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
       
-      // Get existing users
-      let users = JSON.parse(localStorage.getItem('50of50_users')) || [];
+      const users = window.authStore.getUsers();
       
-      // Check if email already exists
       if (users.find(u => u.email === email)) {
         document.getElementById('message').innerHTML = '<div class="error">Email already registered</div>';
         return;
       }
       
-      // Create new user
       const newUser = {
         id: Date.now(),
         name,
@@ -165,18 +163,20 @@
         city,
         email,
         password,
-        registeredAt: new Date().toISOString()
+        registeredAt: new Date().toISOString(),
+        challengeAccess: false,
+        paymentStatus: 'pending',
+        paymentUnlockedAt: null,
+        accessSource: null,
+        devBypass: false
       };
       
-      users.push(newUser);
-      localStorage.setItem('50of50_users', JSON.stringify(users));
+      window.authStore.upsertUser(newUser);
+      window.authStore.setCurrentUser(newUser);
       
-      // Auto-login
-      localStorage.setItem('50of50_currentUser', JSON.stringify({ id: newUser.id, name: newUser.name, email: newUser.email, sex: newUser.sex, age: newUser.age }));
-      
-      document.getElementById('message').innerHTML = '<div class="success">Registration successful! Redirecting...</div>';
+      document.getElementById('message').innerHTML = '<div class="success">Registration successful! Redirecting to payment...</div>';
       setTimeout(() => {
-        window.location.href = 'challenge.html';
+        window.location.href = 'payment.html?from=register';
       }, 1500);
     });
   </script>

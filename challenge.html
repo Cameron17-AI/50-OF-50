@@ -5,14 +5,22 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>50 of 50 Runner</title>
   <link rel="stylesheet" href="styles.css" />
+  <script src="auth.js"></script>
 </head>
 <body>
   <script>
-    // Check if user is logged in
-    const currentUser = JSON.parse(localStorage.getItem('50of50_currentUser'));
-    if (!currentUser) {
-      window.location.href = 'signin.html';
-    }
+    (async function guardChallengeAccess() {
+      const currentUser = window.authStore.getCurrentUser();
+      if (!currentUser) {
+        window.location.href = 'signin.html';
+        return;
+      }
+
+      const syncedUser = await window.authStore.syncChallengeAccessFromServer(currentUser);
+      if (!window.authStore.hasChallengeAccess(syncedUser || currentUser)) {
+        window.location.href = 'payment.html?return=challenge';
+      }
+    })();
   </script>
   <main class="wrap">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">

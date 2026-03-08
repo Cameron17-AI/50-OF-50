@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Unlock Challenge - 50 of 50</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="auth.js"></script>
+  <style>
+    .payment-shell {
+      max-width: 980px;
+      margin: 48px auto;
+      padding: 0 20px;
+    }
+    .payment-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .payment-header h1 {
+      margin: 0;
+      font-size: 34px;
+    }
+    .payment-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.8fr);
+      gap: 24px;
+    }
+    .panel {
+      background: #161616;
+      border: 1px solid #262626;
+      border-radius: 18px;
+      padding: 28px;
+    }
+    .panel h2 {
+      margin-top: 0;
+    }
+    .muted-copy {
+      color: rgba(255, 255, 255, 0.72);
+      line-height: 1.6;
+    }
+    .payment-form {
+      display: grid;
+      gap: 18px;
+      margin-top: 24px;
+    }
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .primary-btn,
+    .secondary-btn,
+    .ghost-btn {
+      border: 0;
+      border-radius: 10px;
+      padding: 14px 18px;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .primary-btn {
+      background: #d5a43a;
+      color: #111;
+    }
+    .secondary-btn {
+      background: #2f81f7;
+      color: #fff;
+    }
+    .ghost-btn {
+      background: #2a2a2a;
+      color: #fff;
+    }
+    .price-card {
+      display: grid;
+      gap: 14px;
+    }
+    .price-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: rgba(255, 255, 255, 0.8);
+    }
+    .price-total {
+      padding-top: 14px;
+      border-top: 1px solid #2e2e2e;
+      font-size: 22px;
+      font-weight: 900;
+      color: #fff;
+    }
+    .status-message {
+      min-height: 24px;
+      margin-top: 12px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .status-message.error {
+      color: #ff7d7d;
+    }
+    .status-message.success {
+      color: #76d672;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(213, 164, 58, 0.12);
+      color: #efc464;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .list {
+      display: grid;
+      gap: 10px;
+      padding-left: 20px;
+      color: rgba(255, 255, 255, 0.8);
+    }
+    .dev-panel {
+      margin-top: 24px;
+      border: 1px dashed #4e6ef2;
+      background: rgba(78, 110, 242, 0.08);
+    }
+    .test-card {
+      border-radius: 12px;
+      background: #0e0e0e;
+      border: 1px solid #2a2a2a;
+      padding: 16px;
+    }
+    @media (max-width: 760px) {
+      .payment-grid {
+        grid-template-columns: 1fr;
+      }
+      .payment-header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="payment-shell">
+    <div class="payment-header">
+      <div>
+        <div class="pill">Challenge access</div>
+        <h1>Unlock the 50 of 50 challenge</h1>
+      </div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="ghost-btn" type="button" onclick="window.location.href='index.html'">Home</button>
+        <button class="ghost-btn" type="button" onclick="logout()">Logout</button>
+      </div>
+    </div>
+
+    <div class="payment-grid">
+      <section class="panel">
+        <h2 id="welcomeTitle">Complete payment</h2>
+        <p class="muted-copy" id="welcomeCopy">
+          Stripe Checkout handles the payment form. Once payment succeeds, this account gets permanent challenge access with unlimited attempts.
+        </p>
+
+        <form id="paymentForm" class="payment-form">
+          <div class="test-card">
+            <strong>Stripe test mode</strong>
+            <p class="muted-copy" style="margin-bottom:0;">
+              Use Stripe's test card `4242 4242 4242 4242`, any future expiry date, and any 3-digit CVC while your secret key is a test key.
+            </p>
+          </div>
+
+          <div class="button-row">
+            <button class="primary-btn" type="submit">Continue to Stripe Checkout</button>
+            <button class="ghost-btn" type="button" onclick="window.location.href='records.html'">Keep browsing</button>
+          </div>
+        </form>
+
+        <div id="paymentStatus" class="status-message" aria-live="polite"></div>
+
+        <section id="devBypassPanel" class="panel dev-panel" style="display:none;">
+          <h2>Developer bypass</h2>
+          <p class="muted-copy">
+            Local testing shortcut. This grants permanent challenge access on this browser without processing the placeholder payment form.
+          </p>
+          <button class="secondary-btn" type="button" id="devBypassBtn">Grant access for testing</button>
+        </section>
+      </section>
+
+      <aside class="panel">
+        <div class="price-card">
+          <div>
+            <div class="pill">One-time unlock</div>
+            <h2 style="margin-bottom:8px;">50 of 50 access</h2>
+            <p class="muted-copy" style="margin:0;">
+              One Stripe payment unlocks the official runner forever on this account.
+            </p>
+          </div>
+
+          <div class="price-line">
+            <span>Challenge access</span>
+            <strong>AUD $50.00</strong>
+          </div>
+          <div class="price-line">
+            <span>Platform fee</span>
+            <strong>AUD $0.00</strong>
+          </div>
+          <div class="price-line price-total">
+            <span>Total</span>
+            <span>AUD $50.00</span>
+          </div>
+
+          <ul class="list">
+            <li>Unlimited official attempts after unlock</li>
+            <li>Access stays with this account permanently</li>
+            <li>All other website pages remain available before payment</li>
+          </ul>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    const currentUser = window.authStore.getCurrentUser();
+    const paymentStatusEl = document.getElementById('paymentStatus');
+    const paymentForm = document.getElementById('paymentForm');
+    const devBypassPanel = document.getElementById('devBypassPanel');
+    const welcomeTitle = document.getElementById('welcomeTitle');
+    const welcomeCopy = document.getElementById('welcomeCopy');
+    const params = new URLSearchParams(window.location.search);
+
+    if (!currentUser) {
+      window.location.href = 'signin.html';
+    }
+
+    function logout() {
+      window.authStore.clearCurrentUser();
+      window.location.href = 'signin.html';
+    }
+
+    function showStatus(message, type) {
+      paymentStatusEl.textContent = message;
+      paymentStatusEl.className = 'status-message' + (type ? ' ' + type : '');
+    }
+
+    async function syncPaidAccess() {
+      const syncedUser = await window.authStore.syncChallengeAccessFromServer(currentUser);
+      return syncedUser || window.authStore.getCurrentUser();
+    }
+
+    function unlockAccount(source) {
+      const updatedUser = window.authStore.grantChallengeAccess(currentUser.id, {
+        source,
+        reference: 'PAY-' + Date.now()
+      });
+
+      if (!updatedUser) {
+        showStatus('Could not update this account. Please sign in again.', 'error');
+        return;
+      }
+
+      welcomeTitle.textContent = 'Challenge unlocked';
+      welcomeCopy.textContent = 'This account now has permanent challenge access and can start as many attempts as needed.';
+      paymentForm.style.display = 'none';
+      showStatus('Access unlocked. Redirecting to the challenge...', 'success');
+
+      setTimeout(() => {
+        window.location.href = 'challenge.html';
+      }, 1200);
+    }
+
+    async function createCheckoutSession() {
+      showStatus('Creating Stripe Checkout session...', '');
+
+      try {
+        const response = await fetch('/api/payments/create-checkout-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: currentUser.id,
+            name: currentUser.name,
+            email: currentUser.email
+          })
+        });
+
+        const data = await response.json();
+        if (!response.ok || !data.url) {
+          showStatus(data.error || 'Could not start Stripe Checkout.', 'error');
+          return;
+        }
+
+        window.location.href = data.url;
+      } catch (error) {
+        showStatus('Could not reach the payment server. Start the backend and try again.', 'error');
+      }
+    }
+
+    paymentForm.addEventListener('submit', function (event) {
+      event.preventDefault();
+      createCheckoutSession();
+    });
+
+    (async function initPaymentPage() {
+      const syncedUser = await syncPaidAccess();
+      const hasAccess = window.authStore.hasChallengeAccess(syncedUser);
+
+      if (params.get('canceled') === '1') {
+        showStatus('Stripe Checkout was canceled. Your account is still available, but challenge access is not unlocked yet.', 'error');
+      }
+
+      if (hasAccess) {
+        welcomeTitle.textContent = 'Challenge already unlocked';
+        welcomeCopy.textContent = 'This account already has permanent access. You can go straight into the runner.';
+        paymentForm.innerHTML = '<div class="button-row"><button class="primary-btn" type="button" onclick="window.location.href=\'challenge.html\'">Start challenge</button><button class="ghost-btn" type="button" onclick="window.location.href=\'records.html\'">View records</button></div>';
+        showStatus('Access already active on this account.', 'success');
+      } else if (window.authStore.shouldShowDeveloperBypass()) {
+        devBypassPanel.style.display = 'block';
+        document.getElementById('devBypassBtn').addEventListener('click', function () {
+          unlockAccount('dev-bypass');
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

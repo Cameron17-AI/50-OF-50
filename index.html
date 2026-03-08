@@ -6,15 +6,9 @@
   <title>50 of 50</title>
   <link rel="stylesheet" href="home.css" />
   <link rel="stylesheet" href="styles.css" />
+  <script src="auth.js"></script>
 </head>
 <body>
-  <script>
-    // Check if user is logged in and show appropriate button
-    function getRunnerLink() {
-      const currentUser = JSON.parse(localStorage.getItem('50of50_currentUser'));
-      return currentUser ? 'challenge.html' : 'signin.html';
-    }
-  </script>
   <a class="skip" href="#main">Skip to content</a>
 
   <header class="topbar">
@@ -251,7 +245,7 @@
         <div class="card card--flat">
           <h2>Quick links</h2>
           <div class="links" style="display:flex; flex-direction:column; gap:18px; align-items:center; margin-top:18px;">
-            <a class="btn btn--demo-highlight" href="challenge.html" style="width:220px;">Start CHALLENGE</a>
+            <a class="btn btn--demo-highlight" id="quickChallengeBtn" href="signin.html" style="width:220px;">Start CHALLENGE</a>
             <a class="btn btn--ghost" href="movements.html" style="width:220px;">Movement list</a>
             <a class="btn btn--ghost" href="rules.html" style="width:220px;">Rules</a>
           </div>
@@ -272,21 +266,24 @@
   </footer>
 
   <script>
-    // Handle authentication buttons
-    function updateAuthButtons() {
-      const currentUser = JSON.parse(localStorage.getItem('50of50_currentUser'));
+    async function updateAuthButtons() {
+      const currentUser = await window.authStore.syncChallengeAccessFromServer(window.authStore.getCurrentUser());
+      const hasAccess = window.authStore.hasChallengeAccess(currentUser);
       const authButtonsEl = document.getElementById('authButtons');
       const heroRunnerBtn = document.getElementById('heroRunnerBtn');
+      const quickChallengeBtn = document.getElementById('quickChallengeBtn');
       
       if (currentUser) {
         authButtonsEl.innerHTML = `
-          <a class="nav__cta btn--demo-highlight" href="challenge.html">Start CHALLENGE</a>
+          <a class="nav__cta btn--demo-highlight" href="${window.authStore.getChallengeEntryPath(currentUser)}">${hasAccess ? 'Start CHALLENGE' : 'Unlock CHALLENGE'}</a>
           <a class="nav__cta" href="records.html">Global Records</a>
           <button onclick="logout()" style="background: none; border: none; color: inherit; cursor: pointer; text-decoration: underline; font-size: inherit;">Logout</button>
         `;
-        heroRunnerBtn.href = 'challenge.html';
+        heroRunnerBtn.href = window.authStore.getChallengeEntryPath(currentUser);
         heroRunnerBtn.classList.add('btn--demo-highlight');
-        heroRunnerBtn.textContent = 'Start CHALLENGE';
+        heroRunnerBtn.textContent = hasAccess ? 'Start CHALLENGE' : 'Unlock CHALLENGE';
+        quickChallengeBtn.href = window.authStore.getChallengeEntryPath(currentUser);
+        quickChallengeBtn.textContent = hasAccess ? 'Start CHALLENGE' : 'Unlock CHALLENGE';
       } else {
         authButtonsEl.innerHTML = `
           <a class="nav__cta" href="signin.html">Sign In</a>
@@ -294,15 +291,16 @@
         `;
         heroRunnerBtn.href = 'signin.html';
         heroRunnerBtn.textContent = 'Try the runner';
+        quickChallengeBtn.href = 'signin.html';
+        quickChallengeBtn.textContent = 'Start CHALLENGE';
       }
     }
 
     function logout() {
-      localStorage.removeItem('50of50_currentUser');
+      window.authStore.clearCurrentUser();
       updateAuthButtons();
     }
 
-    // Update on page load
     updateAuthButtons();
   </script>
 
