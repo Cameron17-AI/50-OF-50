@@ -1,0 +1,11 @@
+### Simulate a challenge completion and request a certificate
+POST http://localhost:3001/certificate
+Content-Type: application/json
+
+{
+  "email": "campervanmancan2@gmail.com",
+  "name": "Cam Bolt",
+  "finishTime": "1:23:45",
+  "globalRank": 42,
+  "ageSexRank": 7
+}

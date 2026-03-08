@@ -1,0 +1,22 @@
+# Email Registration API Example
+
+POST /register
+Content-Type: application/json
+{
+  "email": "user@email.com",
+  "name": "Jane Doe",
+  "age": 30,
+  "sex": "female"
+}
+
+# Certificate API Example
+
+POST /certificate
+Content-Type: application/json
+{
+  "email": "user@email.com",
+  "name": "Jane Doe",
+  "finishTime": "1:23:45",
+  "globalRank": 42,
+  "ageSexRank": 5
+}

@@ -1,0 +1,5 @@
+# .gitignore
+.env
+certificate.pdf
+users.db
+node_modules/
