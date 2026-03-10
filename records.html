@@ -355,11 +355,13 @@
       return sampleResults;
     }
 
-    function purgeRecordsByName(nameToRemove) {
+    function purgeRecordsByNames(namesToRemove) {
       const storedResults = JSON.parse(localStorage.getItem('50of50_results')) || [];
-      const normalizedName = nameToRemove.trim().toLowerCase();
+      const normalizedNames = new Set(
+        namesToRemove.map(name => String(name || '').trim().toLowerCase()).filter(Boolean)
+      );
       const filteredResults = storedResults.filter(record => {
-        return String(record.name || '').trim().toLowerCase() !== normalizedName;
+        return !normalizedNames.has(String(record.name || '').trim().toLowerCase());
       });
 
       if (filteredResults.length !== storedResults.length) {
@@ -385,7 +387,7 @@
       const sexFilter = document.getElementById('sexFilter').value;
       const ageFilter = document.getElementById('ageFilter').value;
       const currentUser = window.authStore.getCurrentUser();
-      const storedResults = purgeRecordsByName('Cameron Bolt');
+      const storedResults = purgeRecordsByNames(['Cameron Bolt', 'Van Williams']);
       const results = buildSampleResults().filter(record => !isRemovedSampleRecord(record)).concat(storedResults);
 
       let filtered = results.filter(r => {

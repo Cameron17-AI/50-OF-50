@@ -55,6 +55,26 @@
     localStorage.setItem(USERS_KEY, JSON.stringify(users.map(normalizeUser)));
   }
 
+  function purgeUsersByNames(namesToRemove) {
+    const normalizedNames = new Set(
+      (namesToRemove || []).map((name) => String(name || '').trim().toLowerCase()).filter(Boolean)
+    );
+
+    if (!normalizedNames.size) return;
+
+    const users = getUsers();
+    const filteredUsers = users.filter((user) => !normalizedNames.has(String(user?.name || '').trim().toLowerCase()));
+
+    if (filteredUsers.length !== users.length) {
+      saveUsers(filteredUsers);
+    }
+
+    const currentUser = getCurrentUser();
+    if (currentUser && normalizedNames.has(String(currentUser.name || '').trim().toLowerCase())) {
+      setCurrentUser(null);
+    }
+  }
+
   function getCurrentUser() {
     return normalizeUser(parseStoredJson(CURRENT_USER_KEY, null));
   }
@@ -251,6 +271,7 @@
     return params.get("dev") === "1" || host === "localhost" || host === "127.0.0.1";
   }
 
+  purgeUsersByNames(["Cameron Bolt", "Van Williams"]);
   syncCurrentUserFromUsers();
 
   window.authStore = {
@@ -264,6 +285,7 @@
     revokeChallengeAccess,
     consumeChallengeAccess,
     clearCurrentUser,
+    purgeUsersByNames,
     syncChallengeAccessFromServer,
     shouldShowDeveloperBypass,
     syncCurrentUserFromUsers,
