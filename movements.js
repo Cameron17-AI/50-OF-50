@@ -13,6 +13,7 @@ const setVideoElementSource = window.setVideoElementSource || ((videoEl, videoPa
 });
 
 let movements = [];
+let cardVideoObserver = null;
 
 function categoryFor(name, desc) {
   const t = `${name} ${desc}`.toLowerCase();
@@ -96,6 +97,45 @@ function prepareVideo(card, video) {
   });
 }
 
+function primeVideo(video) {
+  if (!video || video.dataset.primed === '1') {
+    return;
+  }
+
+  const videoPath = video.getAttribute('data-video-path');
+  if (!videoPath) {
+    return;
+  }
+
+  video.dataset.primed = '1';
+  video.preload = 'metadata';
+  setVideoElementSource(video, videoPath);
+}
+
+function observeCardVideos() {
+  if (cardVideoObserver) {
+    cardVideoObserver.disconnect();
+  }
+
+  cardVideoObserver = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      if (!entry.isIntersecting) {
+        continue;
+      }
+
+      const video = entry.target;
+      primeVideo(video);
+      cardVideoObserver.unobserve(video);
+    }
+  }, {
+    rootMargin: '240px 0px'
+  });
+
+  grid.querySelectorAll('.card__video').forEach((video) => {
+    cardVideoObserver.observe(video);
+  });
+}
+
 function render() {
   const q = searchEl.value || "";
   const cat = filterEl.value || "all";
@@ -144,6 +184,8 @@ function render() {
   grid.querySelectorAll('.card').forEach((card) => {
     prepareVideo(card, card.querySelector('.card__video'));
   });
+
+  observeCardVideos();
 }
 
 async function init() {
@@ -170,6 +212,7 @@ function playMovementVideo(card) {
 
   prepareVideo(card, video);
   video.dataset.hovering = '1';
+  primeVideo(video);
 
   const videoPath = video.getAttribute('data-video-path');
   if (!video.src && videoPath) {
