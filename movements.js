@@ -5,6 +5,7 @@ const grid = document.getElementById("grid");
 const searchEl = document.getElementById("search");
 const filterEl = document.getElementById("filter");
 const countEl = document.getElementById("count");
+const resolveVideoUrl = window.resolveVideoUrl || ((videoPath) => videoPath || '');
 
 let movements = [];
 
@@ -76,10 +77,11 @@ function render() {
     else if (m.id === 18) videoSrc = 'assets/videos/no.18temposquats.mp4';
     else if (m.id === 19) videoSrc = 'assets/videos/no.19russiantwists.mp4';
     else if (m.id === 20) videoSrc = 'assets/videos/no.20bearcrawlsteps.mp4';
+    const resolvedVideoSrc = resolveVideoUrl(videoSrc);
     return `
       <article class="card card--overlay" data-id="${m.id}" onmouseenter="playMovementVideo(this)" onmouseleave="pauseMovementVideo(this)">
         <div class="card__video-bg">
-            <video class="card__video" muted loop playsinline${videoSrc ? ` src='${videoSrc}'` : ''}></video>
+            <video class="card__video" muted loop playsinline${resolvedVideoSrc ? ` src='${resolvedVideoSrc}'` : ''}></video>
             <div class="card__overlay-content">
               <div class="card__top">
                 <div class="badge">${labelFor(m.category)}</div>

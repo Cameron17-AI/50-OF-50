@@ -4,6 +4,7 @@ let startTime = null;
 let tick = null;
 let movementStartTime = null;
 let movementLockTimer = null;
+const resolveVideoUrl = window.resolveVideoUrl || ((videoPath) => videoPath || '');
 
 const el = (id) => document.getElementById(id);
 
@@ -57,7 +58,7 @@ function renderMovement() {
   // Update the main video section
   const videoEl = el("movementVideo");
   if (m.video) {
-    videoEl.src = m.video;
+    videoEl.src = resolveVideoUrl(m.video);
     videoEl.loop = true;
     videoEl.muted = true;
     videoEl.play();
@@ -103,7 +104,7 @@ function resetUI() {
   el("videoCounter").textContent = "1 of 3";
   const videoEl = el("movementVideo");
   if (challenge[0]?.video) {
-    videoEl.src = challenge[0].video;
+    videoEl.src = resolveVideoUrl(challenge[0].video);
     videoEl.loop = true;
     videoEl.muted = true;
     videoEl.pause();

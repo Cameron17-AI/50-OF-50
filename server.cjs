@@ -179,6 +179,16 @@ app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), async
 });
 
 app.use(express.json());
+
+app.get('/app-config.js', (req, res) => {
+	const appConfig = {
+		videoBaseUrl: process.env.VIDEO_BASE_URL || ''
+	};
+
+	res.type('application/javascript');
+	res.send(`window.APP_CONFIG = Object.assign({}, window.APP_CONFIG || {}, ${JSON.stringify(appConfig)});`);
+});
+
 app.use(express.static(__dirname));
 
 app.get('/health', (req, res) => {

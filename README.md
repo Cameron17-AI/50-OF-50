@@ -19,6 +19,7 @@ This is a Node/Express site with a static frontend, Stripe Checkout payments, SQ
 - `PORT` — server port. Use the port provided by the host in production.
 - `APP_URL` — the public site URL, for example `https://50of50.com`.
 - `DATA_DIR` — directory where `users.db` should live. On Render, use `/var/data`.
+- `VIDEO_BASE_URL` — optional public base URL for hosted movement videos. Example: `https://cdn.example.com`.
 - `SMTP_HOST`
 - `SMTP_PORT`
 - `SMTP_USER`
@@ -28,6 +29,19 @@ This is a Node/Express site with a static frontend, Stripe Checkout payments, SQ
 - `STRIPE_WEBHOOK_SECRET`
 - `STRIPE_CURRENCY` — currently `aud`.
 - `CHALLENGE_PRICE_CENTS` — currently `1500` for AUD $15.00.
+
+## Video Hosting
+The movement videos are too large to keep in the current Render/GitHub deployment flow. The app supports hosting them externally.
+
+How it works:
+- Keep the existing paths in `challenge.json` and `demo-challenge.json`, such as `assets/videos/no.1pushup.mp4`.
+- Upload the same folder structure to a public storage location.
+- Set `VIDEO_BASE_URL` to that storage base URL.
+- The site will request videos from `${VIDEO_BASE_URL}/assets/videos/...`.
+
+Example:
+- `VIDEO_BASE_URL=https://cdn.50of50.com`
+- video request becomes `https://cdn.50of50.com/assets/videos/no.1pushup.mp4`
 
 ## Stripe Go-Live Checklist
 1. In Stripe, activate your account and complete business verification.
@@ -71,6 +85,7 @@ This repo now includes a `render.yaml` blueprint for Render.
 5. Fill in these environment variables in Render:
 	- `APP_URL=https://50of50.com`
 	- `DATA_DIR=/var/data`
+	- `VIDEO_BASE_URL=https://your-public-video-host`
 	- `SMTP_HOST`
 	- `SMTP_PORT`
 	- `SMTP_USER`
