@@ -5,6 +5,11 @@ let tick = null;
 let movementStartTime = null;
 let movementLockTimer = null;
 const resolveVideoUrl = window.resolveVideoUrl || ((videoPath) => videoPath || '');
+const setVideoElementSource = window.setVideoElementSource || ((videoEl, videoPath) => {
+  if (videoEl) {
+    videoEl.src = resolveVideoUrl(videoPath);
+  }
+});
 
 const QUIT_STATE_KEY = '50of50_quit_state';
 const QUIT_IDX_KEY = '50of50_quit_idx';
@@ -55,7 +60,7 @@ function renderMovement() {
   // Update the main video section
   const videoEl = el("movementVideo");
   if (m.video) {
-    videoEl.src = resolveVideoUrl(m.video);
+    setVideoElementSource(videoEl, m.video);
     videoEl.currentTime = 0;
     videoEl.muted = true;
     videoEl.play();
@@ -329,7 +334,7 @@ function resetUI() {
   el("videoCounter").textContent = `1 of ${challenge.length || 50}`;
   const videoEl = el("movementVideo");
   if (challenge[0]?.video) {
-    videoEl.src = resolveVideoUrl(challenge[0].video);
+    setVideoElementSource(videoEl, challenge[0].video);
     videoEl.pause();
     videoEl.currentTime = 0;
   } else {

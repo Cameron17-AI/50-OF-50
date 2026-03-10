@@ -6,6 +6,11 @@ const searchEl = document.getElementById("search");
 const filterEl = document.getElementById("filter");
 const countEl = document.getElementById("count");
 const resolveVideoUrl = window.resolveVideoUrl || ((videoPath) => videoPath || '');
+const setVideoElementSource = window.setVideoElementSource || ((videoEl, videoPath) => {
+  if (videoEl) {
+    videoEl.src = resolveVideoUrl(videoPath);
+  }
+});
 
 let movements = [];
 
@@ -77,11 +82,10 @@ function render() {
     else if (m.id === 18) videoSrc = 'assets/videos/no.18temposquats.mp4';
     else if (m.id === 19) videoSrc = 'assets/videos/no.19russiantwists.mp4';
     else if (m.id === 20) videoSrc = 'assets/videos/no.20bearcrawlsteps.mp4';
-    const resolvedVideoSrc = resolveVideoUrl(videoSrc);
     return `
       <article class="card card--overlay" data-id="${m.id}" onmouseenter="playMovementVideo(this)" onmouseleave="pauseMovementVideo(this)">
         <div class="card__video-bg">
-            <video class="card__video" muted loop playsinline${resolvedVideoSrc ? ` src='${resolvedVideoSrc}'` : ''}></video>
+            <video class="card__video" muted loop playsinline${videoSrc ? ` data-video-path='${videoSrc}'` : ''}></video>
             <div class="card__overlay-content">
               <div class="card__top">
                 <div class="badge">${labelFor(m.category)}</div>
@@ -95,6 +99,13 @@ function render() {
       </article>
     `;
   }).join("");
+
+  grid.querySelectorAll('.card__video').forEach((videoEl) => {
+    const videoPath = videoEl.getAttribute('data-video-path');
+    if (videoPath) {
+      setVideoElementSource(videoEl, videoPath);
+    }
+  });
 }
 
 async function init() {
