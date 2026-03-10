@@ -145,6 +145,45 @@ function resetUI() {
   setButtons({ canStart: true, canDone: false, canReset: false });
 }
 
+async function getDemoCompletionCta() {
+  if (!window.authStore) {
+    return {
+      href: 'signin.html',
+      label: 'Enter Challenge',
+      copy: 'Ready to compete and earn your right?'
+    };
+  }
+
+  const currentUser = await window.authStore.syncChallengeAccessFromServer(window.authStore.getCurrentUser());
+  const hasAccess = window.authStore.hasChallengeAccess(currentUser);
+
+  if (currentUser && hasAccess) {
+    return {
+      href: 'challenge.html',
+      label: 'Start Challenge',
+      copy: 'Your event entry is active. Go straight into the official challenge.'
+    };
+  }
+
+  return {
+    href: currentUser ? window.authStore.getChallengeEntryPath(currentUser) : 'signin.html',
+    label: 'Enter Challenge',
+    copy: 'Ready to compete and earn your right?'
+  };
+}
+
+async function updateDemoCompletionPrompt() {
+  const promptButton = el('registerPromptBtn');
+  const promptCopy = el('registerPromptCopy');
+
+  if (!promptButton || !promptCopy) return;
+
+  const cta = await getDemoCompletionCta();
+  promptButton.href = cta.href;
+  promptButton.textContent = cta.label;
+  promptCopy.textContent = cta.copy;
+}
+
 function finish() {
   stopTimer();
   if (movementLockTimer) clearInterval(movementLockTimer);
@@ -159,6 +198,7 @@ function finish() {
   setTimeout(() => {
     el("finish").classList.add("hidden");
     el("register-prompt").classList.remove("hidden");
+    updateDemoCompletionPrompt().catch(() => {});
   }, 2000);
 }
 
@@ -173,6 +213,7 @@ async function loadChallenge() {
 async function init() {
   await loadChallenge();
   resetUI();
+  await updateDemoCompletionPrompt();
 
   el("startBtn").addEventListener("click", () => {
     setButtons({ canStart: false, canDone: true, canReset: true });
