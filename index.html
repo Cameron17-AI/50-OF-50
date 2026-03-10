@@ -266,6 +266,22 @@
   </footer>
 
   <script>
+    function getChallengeTarget(user) {
+      return user ? window.authStore.getChallengeEntryPath(user) : 'signin.html';
+    }
+
+    async function handleChallengeNavigation(event) {
+      event.preventDefault();
+      const liveUser = await window.authStore.syncChallengeAccessFromServer(window.authStore.getCurrentUser());
+      window.location.href = getChallengeTarget(liveUser);
+    }
+
+    function bindChallengeLink(linkEl) {
+      if (!linkEl || linkEl.dataset.challengeBound === '1') return;
+      linkEl.dataset.challengeBound = '1';
+      linkEl.addEventListener('click', handleChallengeNavigation);
+    }
+
     async function updateAuthButtons() {
       const currentUser = await window.authStore.syncChallengeAccessFromServer(window.authStore.getCurrentUser());
       const hasAccess = window.authStore.hasChallengeAccess(currentUser);
@@ -275,15 +291,18 @@
       
       if (currentUser) {
         authButtonsEl.innerHTML = `
-          <a class="nav__cta btn--demo-highlight" href="${window.authStore.getChallengeEntryPath(currentUser)}">${hasAccess ? 'Start CHALLENGE' : 'Unlock CHALLENGE'}</a>
+          <a class="nav__cta btn--demo-highlight" id="navChallengeBtn" href="${window.authStore.getChallengeEntryPath(currentUser)}">${hasAccess ? 'Start CHALLENGE' : 'Unlock CHALLENGE'}</a>
           <a class="nav__cta" href="records.html">Global Records</a>
           <button onclick="logout()" style="background: none; border: none; color: inherit; cursor: pointer; text-decoration: underline; font-size: inherit;">Logout</button>
         `;
-        heroRunnerBtn.href = window.authStore.getChallengeEntryPath(currentUser);
+        heroRunnerBtn.href = getChallengeTarget(currentUser);
         heroRunnerBtn.classList.add('btn--demo-highlight');
         heroRunnerBtn.textContent = hasAccess ? 'Start CHALLENGE' : 'Unlock CHALLENGE';
-        quickChallengeBtn.href = window.authStore.getChallengeEntryPath(currentUser);
+        quickChallengeBtn.href = getChallengeTarget(currentUser);
         quickChallengeBtn.textContent = hasAccess ? 'Start CHALLENGE' : 'Unlock CHALLENGE';
+        bindChallengeLink(document.getElementById('navChallengeBtn'));
+        bindChallengeLink(heroRunnerBtn);
+        bindChallengeLink(quickChallengeBtn);
       } else {
         authButtonsEl.innerHTML = `
           <a class="nav__cta" href="signin.html">Sign In</a>

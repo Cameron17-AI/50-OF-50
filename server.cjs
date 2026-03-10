@@ -10,6 +10,34 @@ require('dotenv').config();
 const app = express();
 let adminSession = null;
 const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY) : null;
+const dataDirectory = process.env.DATA_DIR || process.env.RENDER_DISK_MOUNT_PATH || __dirname;
+const databasePath = path.join(dataDirectory, 'users.db');
+
+app.set('trust proxy', 1);
+
+fs.mkdirSync(dataDirectory, { recursive: true });
+
+function isAllowedDevOrigin(origin) {
+	if (!origin) return false;
+	return /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin);
+}
+
+app.use((req, res, next) => {
+	const origin = req.headers.origin;
+
+	if (isAllowedDevOrigin(origin)) {
+		res.header('Access-Control-Allow-Origin', origin);
+		res.header('Vary', 'Origin');
+		res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+		res.header('Access-Control-Allow-Headers', 'Content-Type, x-admin-token');
+	}
+
+	if (req.method === 'OPTIONS') {
+		return res.sendStatus(204);
+	}
+
+	next();
+});
 
 function dbRun(sql, params = []) {
 	return new Promise((resolve, reject) => {
@@ -41,6 +69,24 @@ function isPaidCheckoutSession(session) {
 	return session && session.payment_status === 'paid';
 }
 
+function isPaymentAccessAvailable(payment) {
+	return Boolean(payment && payment.payment_status === 'paid' && !payment.entry_consumed_at);
+}
+
+function isLocalRequest(req) {
+	const host = (req.hostname || '').toLowerCase();
+	const forwardedFor = String(req.headers['x-forwarded-for'] || '').toLowerCase();
+	const ip = String(req.ip || '').toLowerCase();
+	return host === 'localhost'
+		|| host === '127.0.0.1'
+		|| host === '::1'
+		|| ip === '127.0.0.1'
+		|| ip === '::1'
+		|| ip.endsWith(':127.0.0.1')
+		|| forwardedFor.includes('127.0.0.1')
+		|| forwardedFor.includes('::1');
+}
+
 async function persistChallengePayment(session, accessSource) {
 	const customerEmail = normalizeEmail(
 		session?.customer_details?.email ||
@@ -60,16 +106,21 @@ async function persistChallengePayment(session, accessSource) {
 			stripe_session_id,
 			stripe_payment_intent_id,
 			paid_at,
+			entry_consumed_at,
 			amount_total,
 			currency,
 			access_source,
 			customer_email
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		ON CONFLICT(email) DO UPDATE SET
 			payment_status = excluded.payment_status,
 			stripe_session_id = excluded.stripe_session_id,
 			stripe_payment_intent_id = excluded.stripe_payment_intent_id,
 			paid_at = excluded.paid_at,
+			entry_consumed_at = CASE
+				WHEN challenge_payments.stripe_session_id IS NOT excluded.stripe_session_id THEN NULL
+				ELSE challenge_payments.entry_consumed_at
+			END,
 			amount_total = excluded.amount_total,
 			currency = excluded.currency,
 			access_source = excluded.access_source,
@@ -80,6 +131,7 @@ async function persistChallengePayment(session, accessSource) {
 			session.id || null,
 			session.payment_intent || null,
 			paidAt,
+			null,
 			session.amount_total || 0,
 			session.currency || process.env.STRIPE_CURRENCY || 'aud',
 			accessSource || 'stripe-checkout',
@@ -96,6 +148,7 @@ async function persistChallengePayment(session, accessSource) {
 
 async function retrieveAndPersistCheckoutSession(sessionId, accessSource) {
 	if (!stripe) throw new Error('Stripe is not configured.');
+	console.log('Retrieving Stripe Checkout session', sessionId, 'via', accessSource);
 	const session = await stripe.checkout.sessions.retrieve(sessionId);
 	await persistChallengePayment(session, accessSource);
 	return session;
@@ -128,13 +181,17 @@ app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), async
 app.use(express.json());
 app.use(express.static(__dirname));
 
+app.get('/health', (req, res) => {
+	res.json({ ok: true });
+});
+
 function requireAdmin(req, res, next) {
 	if (req.headers['x-admin-token'] && req.headers['x-admin-token'] === adminSession) {
 		return next();
 	}
 	return res.status(401).json({ error: 'Unauthorized' });
 }
-const db = new sqlite3.Database('./users.db');
+const db = new sqlite3.Database(databasePath);
 db.serialize(() => {
 	db.run(`CREATE TABLE IF NOT EXISTS users (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -150,11 +207,17 @@ db.serialize(() => {
 		stripe_session_id TEXT,
 		stripe_payment_intent_id TEXT,
 		paid_at DATETIME,
+		entry_consumed_at DATETIME,
 		amount_total INTEGER DEFAULT 0,
 		currency TEXT DEFAULT 'aud',
 		access_source TEXT,
 		customer_email TEXT
 	)`);
+	db.run('ALTER TABLE challenge_payments ADD COLUMN entry_consumed_at DATETIME', (err) => {
+		if (err && !/duplicate column name/i.test(err.message)) {
+			console.error('Failed to ensure entry_consumed_at column exists:', err.message);
+		}
+	});
 });
 const smtpPort = Number(process.env.SMTP_PORT || 587);
 const transporter = nodemailer.createTransport({
@@ -188,7 +251,6 @@ app.post('/api/payments/create-checkout-session', async (req, res) => {
 		const baseUrl = getBaseUrl(req);
 		const session = await stripe.checkout.sessions.create({
 			mode: 'payment',
-			customer_email: normalizedEmail,
 			client_reference_id: userId ? String(userId) : normalizedEmail,
 			success_url: `${baseUrl}/payment-success.html?session_id={CHECKOUT_SESSION_ID}`,
 			cancel_url: `${baseUrl}/payment.html?canceled=1`,
@@ -197,8 +259,8 @@ app.post('/api/payments/create-checkout-session', async (req, res) => {
 					price_data: {
 						currency,
 						product_data: {
-							name: '50 of 50 Challenge Access',
-							description: 'Permanent unlock for unlimited official challenge attempts.'
+							name: '50 of 50 One-Time Event Entry',
+							description: 'One-time payment for one official 50 of 50 event challenge entry.'
 						},
 						unit_amount: amount
 					},
@@ -241,6 +303,7 @@ app.get('/api/stripe/checkout-session-status', async (req, res) => {
 			stripeSessionId: session.id
 		});
 	} catch (err) {
+		console.error('Failed to verify checkout session', sessionId, err);
 		res.status(500).json({ error: 'Failed to verify checkout session.' });
 	}
 });
@@ -253,7 +316,7 @@ app.get('/api/payments/status', async (req, res) => {
 
 	try {
 		const payment = await dbGet(
-			`SELECT email, payment_status, stripe_session_id, paid_at, amount_total, currency, access_source
+			`SELECT email, payment_status, stripe_session_id, paid_at, entry_consumed_at, amount_total, currency, access_source
 			 FROM challenge_payments
 			 WHERE email = ?`,
 			[email]
@@ -261,12 +324,14 @@ app.get('/api/payments/status', async (req, res) => {
 
 		res.json({
 			paid: Boolean(payment && payment.payment_status === 'paid'),
+			accessAvailable: isPaymentAccessAvailable(payment),
 			payment: payment
 				? {
 					email: payment.email,
 					status: payment.payment_status,
 					stripeSessionId: payment.stripe_session_id,
 					paidAt: payment.paid_at,
+					consumedAt: payment.entry_consumed_at,
 					amountTotal: payment.amount_total,
 					currency: payment.currency,
 					accessSource: payment.access_source
@@ -275,6 +340,102 @@ app.get('/api/payments/status', async (req, res) => {
 		});
 	} catch (err) {
 		res.status(500).json({ error: 'Failed to check payment status.' });
+	}
+});
+app.post('/api/payments/consume-entry', async (req, res) => {
+	const email = normalizeEmail(req.body?.email);
+
+	if (!email) {
+		return res.status(400).json({ error: 'email is required.' });
+	}
+
+	try {
+		const payment = await dbGet(
+			`SELECT email, payment_status, stripe_session_id, entry_consumed_at
+			 FROM challenge_payments
+			 WHERE email = ?`,
+			[email]
+		);
+
+		if (!payment || payment.payment_status !== 'paid') {
+			return res.status(404).json({ error: 'No paid event entry found for this email.' });
+		}
+
+		if (payment.entry_consumed_at) {
+			return res.json({
+				success: true,
+				alreadyConsumed: true,
+				payment: {
+					email: payment.email,
+					status: payment.payment_status,
+					stripeSessionId: payment.stripe_session_id,
+					consumedAt: payment.entry_consumed_at
+				}
+			});
+		}
+
+		const consumedAt = new Date().toISOString();
+		await dbRun(
+			`UPDATE challenge_payments
+			 SET entry_consumed_at = ?
+			 WHERE email = ?`,
+			[consumedAt, email]
+		);
+
+		return res.json({
+			success: true,
+			payment: {
+				email,
+				status: 'paid',
+				stripeSessionId: payment.stripe_session_id,
+				consumedAt
+			}
+		});
+	} catch (err) {
+		return res.status(500).json({ error: 'Failed to consume event entry.' });
+	}
+});
+app.post('/api/payments/reset-entry', async (req, res) => {
+	if (!isLocalRequest(req)) {
+		return res.status(403).json({ error: 'Reset is only available for local testing.' });
+	}
+
+	const email = normalizeEmail(req.body?.email);
+
+	if (!email) {
+		return res.status(400).json({ error: 'email is required.' });
+	}
+
+	try {
+		const payment = await dbGet(
+			`SELECT email, payment_status, stripe_session_id
+			 FROM challenge_payments
+			 WHERE email = ?`,
+			[email]
+		);
+
+		if (!payment || payment.payment_status !== 'paid') {
+			return res.status(404).json({ error: 'No paid event entry found for this email.' });
+		}
+
+		await dbRun(
+			`UPDATE challenge_payments
+			 SET entry_consumed_at = NULL
+			 WHERE email = ?`,
+			[email]
+		);
+
+		return res.json({
+			success: true,
+			payment: {
+				email,
+				status: 'paid',
+				stripeSessionId: payment.stripe_session_id,
+				consumedAt: null
+			}
+		});
+	} catch (err) {
+		return res.status(500).json({ error: 'Failed to reset event entry.' });
 	}
 });
 app.post('/register', (req, res) => {
@@ -329,8 +490,9 @@ app.post('/certificate', async (req, res) => {
 	if (!Number.isInteger(ageSexRank) || ageSexRank < 1) return res.status(400).json({ error: 'Invalid age/sex rank.' });
 	try {
 		const doc = new PDFDocument({ size: 'A4', margin: 50 });
-		const certPath = path.join(__dirname, 'certificate.pdf');
-		doc.pipe(fs.createWriteStream(certPath));
+		const certPath = path.join(__dirname, `certificate-${Date.now()}.pdf`);
+		const writeStream = fs.createWriteStream(certPath);
+		doc.pipe(writeStream);
 		doc.rect(0, 0, doc.page.width, doc.page.height).fill('#111');
 		doc.save();
 		doc.lineWidth(6);
@@ -383,9 +545,10 @@ app.post('/certificate', async (req, res) => {
 		doc.font('Helvetica-Bold').fontSize(28).fillColor('#111').opacity(1);
 		doc.text('✔', doc.page.width - 100, doc.page.height - 98, { width: 40, align: 'center' });
 		doc.restore();
-		doc.end();
-		doc.on('finish', async () => {
+
+		writeStream.on('finish', async () => {
 			try {
+				console.log('Sending certificate email to', email, 'with PDF', certPath);
 				await transporter.sendMail({
 					from: process.env.FROM_EMAIL,
 					to: email,
@@ -396,15 +559,28 @@ app.post('/certificate', async (req, res) => {
 				fs.unlinkSync(certPath);
 				res.json({ success: true });
 			} catch (err) {
+				console.error('Failed to send certificate email:', err);
+				if (fs.existsSync(certPath)) fs.unlinkSync(certPath);
 				res.status(500).json({ error: 'Failed to send email.' });
 			}
 		});
+
+		writeStream.on('error', (err) => {
+			console.error('Failed to write certificate PDF:', err);
+			if (!res.headersSent) {
+				res.status(500).json({ error: 'Failed to generate certificate.' });
+			}
+		});
+
+		doc.end();
 	} catch (err) {
+		console.error('Failed to generate certificate:', err);
 		res.status(500).json({ error: 'Failed to generate certificate.' });
 	}
 });
 app.listen(process.env.PORT || 3001, () => {
 	console.log('Backend running on port', process.env.PORT || 3001);
+	console.log('Using SQLite database at', databasePath);
 });
 // Entry point for the backend server (renamed from server.js to server.cjs)
 // No code changes needed, just use: node server.cjs

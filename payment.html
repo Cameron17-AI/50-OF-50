@@ -127,6 +127,12 @@
       border: 1px dashed #4e6ef2;
       background: rgba(78, 110, 242, 0.08);
     }
+    .dev-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 14px;
+    }
     .test-card {
       border-radius: 12px;
       background: #0e0e0e;
@@ -161,11 +167,11 @@
       <section class="panel">
         <h2 id="welcomeTitle">Complete payment</h2>
         <p class="muted-copy" id="welcomeCopy">
-          Stripe Checkout handles the payment form. Once payment succeeds, this account gets permanent challenge access with unlimited attempts.
+          Stripe Checkout handles the payment form. Once payment succeeds, this account gets access for one official event challenge entry.
         </p>
 
         <form id="paymentForm" class="payment-form">
-          <div class="test-card">
+          <div class="test-card" id="stripeModeCard">
             <strong>Stripe test mode</strong>
             <p class="muted-copy" style="margin-bottom:0;">
               Use Stripe's test card `4242 4242 4242 4242`, any future expiry date, and any 3-digit CVC while your secret key is a test key.
@@ -183,25 +189,28 @@
         <section id="devBypassPanel" class="panel dev-panel" style="display:none;">
           <h2>Developer bypass</h2>
           <p class="muted-copy">
-            Local testing shortcut. This grants permanent challenge access on this browser without processing the placeholder payment form.
+            Local testing shortcut. This grants one event challenge entry on this browser without processing the payment form.
           </p>
-          <button class="secondary-btn" type="button" id="devBypassBtn">Grant access for testing</button>
+          <div class="dev-actions">
+            <button class="secondary-btn" type="button" id="devBypassBtn">Grant access for testing</button>
+            <button class="ghost-btn" type="button" id="devResetBtn">Reset used event entry</button>
+          </div>
         </section>
       </section>
 
       <aside class="panel">
         <div class="price-card">
           <div>
-            <div class="pill">One-time unlock</div>
-            <h2 style="margin-bottom:8px;">50 of 50 access</h2>
+            <div class="pill">One-time payment</div>
+            <h2 style="margin-bottom:8px;">50 of 50 event entry</h2>
             <p class="muted-copy" style="margin:0;">
-              One Stripe payment unlocks the official runner forever on this account.
+              One Stripe payment unlocks one official 50 of 50 event challenge entry for this account.
             </p>
           </div>
 
           <div class="price-line">
-            <span>Challenge access</span>
-            <strong>AUD $50.00</strong>
+            <span>One-time event entry</span>
+            <strong>AUD $15.00</strong>
           </div>
           <div class="price-line">
             <span>Platform fee</span>
@@ -209,12 +218,12 @@
           </div>
           <div class="price-line price-total">
             <span>Total</span>
-            <span>AUD $50.00</span>
+            <span>AUD $15.00</span>
           </div>
 
           <ul class="list">
-            <li>Unlimited official attempts after unlock</li>
-            <li>Access stays with this account permanently</li>
+            <li>One payment for one official event challenge entry</li>
+            <li>Built for a single event participation flow</li>
             <li>All other website pages remain available before payment</li>
           </ul>
         </div>
@@ -227,6 +236,7 @@
     const paymentStatusEl = document.getElementById('paymentStatus');
     const paymentForm = document.getElementById('paymentForm');
     const devBypassPanel = document.getElementById('devBypassPanel');
+    const stripeModeCard = document.getElementById('stripeModeCard');
     const welcomeTitle = document.getElementById('welcomeTitle');
     const welcomeCopy = document.getElementById('welcomeCopy');
     const params = new URLSearchParams(window.location.search);
@@ -250,6 +260,36 @@
       return syncedUser || window.authStore.getCurrentUser();
     }
 
+    async function resetEventEntry() {
+      showStatus('Resetting used event entry for local testing...', '');
+
+      try {
+        const response = await fetch(window.authStore.apiUrl('/api/payments/reset-entry'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: currentUser.email })
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          showStatus(data.error || 'Could not reset the event entry.', 'error');
+          return;
+        }
+
+        window.authStore.grantChallengeAccess(currentUser.id, {
+          source: 'dev-reset',
+          reference: data.payment?.stripeSessionId || null
+        });
+
+        welcomeTitle.textContent = 'Event entry reset for testing';
+        welcomeCopy.textContent = 'This local test account now has one event challenge entry available again.';
+        paymentForm.innerHTML = '<div class="button-row"><button class="primary-btn" type="button" onclick="window.location.href=\'challenge.html\'">Start challenge</button><button class="ghost-btn" type="button" onclick="window.location.href=\'records.html\'">View records</button></div>';
+        showStatus('Used event entry reset successfully for local testing.', 'success');
+      } catch (error) {
+        showStatus('Could not reach the payment server to reset the event entry.', 'error');
+      }
+    }
+
     function unlockAccount(source) {
       const updatedUser = window.authStore.grantChallengeAccess(currentUser.id, {
         source,
@@ -261,8 +301,8 @@
         return;
       }
 
-      welcomeTitle.textContent = 'Challenge unlocked';
-      welcomeCopy.textContent = 'This account now has permanent challenge access and can start as many attempts as needed.';
+      welcomeTitle.textContent = 'Event entry unlocked';
+      welcomeCopy.textContent = 'This account now has access to one official 50 of 50 event challenge entry.';
       paymentForm.style.display = 'none';
       showStatus('Access unlocked. Redirecting to the challenge...', 'success');
 
@@ -275,7 +315,7 @@
       showStatus('Creating Stripe Checkout session...', '');
 
       try {
-        const response = await fetch('/api/payments/create-checkout-session', {
+        const response = await fetch(window.authStore.apiUrl('/api/payments/create-checkout-session'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -303,6 +343,8 @@
     });
 
     (async function initPaymentPage() {
+      stripeModeCard.style.display = window.authStore.shouldShowDeveloperBypass() ? '' : 'none';
+
       const syncedUser = await syncPaidAccess();
       const hasAccess = window.authStore.hasChallengeAccess(syncedUser);
 
@@ -311,14 +353,21 @@
       }
 
       if (hasAccess) {
-        welcomeTitle.textContent = 'Challenge already unlocked';
-        welcomeCopy.textContent = 'This account already has permanent access. You can go straight into the runner.';
+        welcomeTitle.textContent = 'Event entry already unlocked';
+        welcomeCopy.textContent = 'This account already has an unlocked official event entry. You can go straight into the runner.';
         paymentForm.innerHTML = '<div class="button-row"><button class="primary-btn" type="button" onclick="window.location.href=\'challenge.html\'">Start challenge</button><button class="ghost-btn" type="button" onclick="window.location.href=\'records.html\'">View records</button></div>';
         showStatus('Access already active on this account.', 'success');
+      } else if ((syncedUser || currentUser).paymentStatus === 'consumed') {
+        welcomeTitle.textContent = 'Event entry already used';
+        welcomeCopy.textContent = 'This account has already used its previous official event entry. Purchase again to enter another event challenge.';
+        showStatus('Your previous one-time event entry has already been used.', 'error');
       } else if (window.authStore.shouldShowDeveloperBypass()) {
         devBypassPanel.style.display = 'block';
         document.getElementById('devBypassBtn').addEventListener('click', function () {
           unlockAccount('dev-bypass');
+        });
+        document.getElementById('devResetBtn').addEventListener('click', function () {
+          resetEventEntry();
         });
       }
     })();

@@ -121,9 +121,9 @@
       }
       
       window.authStore.setCurrentUser(user);
-      const syncedUser = await window.authStore.syncChallengeAccessFromServer(user);
-      
-      window.location.href = window.authStore.getChallengeEntryPath(syncedUser || user);
+      await window.authStore.syncChallengeAccessFromServer(user);
+
+      window.location.href = 'index.html';
     });
   </script>
 </body>

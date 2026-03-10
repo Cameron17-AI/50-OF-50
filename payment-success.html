@@ -65,7 +65,7 @@
     <section class="success-card">
       <h1>Finalizing your challenge access</h1>
       <p class="muted-copy">
-        Stripe has redirected you back. This page verifies the Checkout Session and then unlocks the challenge on your account.
+        Stripe has redirected you back. This page verifies the Checkout Session and then unlocks your one-time event challenge entry on this account.
       </p>
 
       <div id="status" class="status" aria-live="polite">Checking payment status...</div>
@@ -98,7 +98,7 @@
       }
 
       try {
-        const response = await fetch(`/api/stripe/checkout-session-status?session_id=${encodeURIComponent(sessionId)}`);
+        const response = await fetch(window.authStore.apiUrl(`/api/stripe/checkout-session-status?session_id=${encodeURIComponent(sessionId)}`));
         const data = await response.json();
 
         if (!response.ok) {
@@ -112,7 +112,7 @@
         }
 
         if (!currentUser) {
-          setStatus('Payment was verified. Sign in to attach the unlocked access to your browser session.', 'success');
+          setStatus('Payment was verified. Sign in to attach the unlocked event entry to your browser session.', 'success');
           return;
         }
 
@@ -127,7 +127,7 @@
         });
 
         challengeBtn.style.display = '';
-        setStatus('Payment verified. Challenge access is now unlocked on this account.', 'success');
+        setStatus('Payment verified. Your one-time event challenge entry is now unlocked on this account. GET READY TO START CHALLENGE', 'success');
       } catch (error) {
         setStatus('Could not reach the payment server to confirm the Stripe session.', 'error');
       }

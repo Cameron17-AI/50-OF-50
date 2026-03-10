@@ -98,6 +98,24 @@
       font-size: 12px;
       opacity: 0.7;
     }
+    .sample-note {
+      margin: 0 0 16px;
+      font-size: 12px;
+      opacity: 0.7;
+    }
+    .entry-badge {
+      display: inline-block;
+      margin-left: 8px;
+      padding: 2px 8px;
+      border: 1px solid #3a3a3a;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #d7d7d7;
+      vertical-align: middle;
+    }
   </style>
 </head>
 <body>
@@ -111,6 +129,8 @@
     </div>
 
     <button class="btn-compete" id="competeBtn" style="display:none;">Start Challenge</button>
+
+    <p class="sample-note">Exhibition entries are included in the leaderboard and are marked below.</p>
 
     <div class="filters">
       <label style="opacity: 0.6; font-size: 13px;">Filter by:</label>
@@ -164,11 +184,209 @@
       return new Date(ms).toISOString().substr(11, 8);
     }
 
+    const HIDDEN_RANKINGS = new Set([59, 61, 62, 63, 65, 69, 72, 75, 77, 80, 85]);
+    const REMOVED_SAMPLE_RECORDS = [
+      {
+        name: 'Sana Milosevic',
+        age: 32,
+        sex: 'female',
+        city: 'Skopje, North Macedonia',
+        finishTime: '01:10:00',
+        lastMovementNumber: 46
+      }
+    ];
+
+    function buildSampleResults() {
+      const maleNames = [
+        'Liam Bennett', 'Noah Castillo', 'Ethan Duarte', 'Mateo Fischer', 'Lucas Haddad', 'Arjun Iqbal', 'Mason Jensen', 'Leo Kovacs',
+        'Owen Larsen', 'Elijah Moreau', 'Aiden Novak', 'Daniel Okafor', 'Julian Petrov', 'Isaac Quinn', 'Logan Ribeiro', 'Henry Silva',
+        'Jack Tanaka', 'Wyatt Usman', 'Levi Volkov', 'Sebastian Walker', 'Gabriel Xu', 'Carter Yilmaz', 'Hudson Zoric', 'Caleb Amari',
+        'Nathan Bako', 'Connor Choi', 'Samuel Dlamini', 'Ezra Elamin', 'Asher Farouk', 'Ryan Gallagher', 'Dylan Hassan', 'Roman Idris',
+        'Jude Kamanzi', 'Eli Laurent', 'Micah Mensah', 'Adam Nordin', 'Cole Ortega', 'Parker Pereira', 'Riley Qureshi', 'Austin Rahman'
+      ];
+      const femaleNames = [
+        'Olivia Santos', 'Emma Takahashi', 'Ava Upton', 'Sophia Valdez', 'Isabella Wong', 'Mia Xerri', 'Charlotte Yeboah', 'Amelia Zahra',
+        'Harper Almeida', 'Evelyn Bisset', 'Abigail Costa', 'Ella Demir', 'Scarlett Espinoza', 'Grace Ferreira', 'Chloe Ghosh', 'Lily Haddadi',
+        'Nora Ibrahim', 'Zoe Jimenez', 'Hannah Khatri', 'Aria Lund', 'Layla Mbeki', 'Aurora Nasser', 'Ellie Osei', 'Stella Popescu',
+        'Mila Quispe', 'Violet Russo', 'Lucy Sayed', 'Hazel Tran', 'Penelope Uzun', 'Sofia Villanueva', 'Claire Watanabe', 'Naomi Xolani',
+        'Alice Yoon', 'Sadie Zaman', 'Ruby Anders', 'Elena Braga', 'Maya Chen', 'Luna Darzi', 'Ivy Elbaz', 'Freya Farah'
+      ];
+      const cities = [
+        'Tokyo, Japan', 'Cape Town, South Africa', 'Toronto, Canada', 'Sao Paulo, Brazil', 'Auckland, New Zealand', 'Nairobi, Kenya',
+        'Stockholm, Sweden', 'Lima, Peru', 'Seoul, South Korea', 'Dublin, Ireland', 'Dubai, UAE', 'Berlin, Germany', 'Singapore, Singapore',
+        'Bogota, Colombia', 'Accra, Ghana', 'Oslo, Norway', 'Rome, Italy', 'Cairo, Egypt', 'Bangkok, Thailand', 'Brisbane, Australia',
+        'Mumbai, India', 'Lisbon, Portugal', 'Mexico City, Mexico', 'Helsinki, Finland', 'Kuala Lumpur, Malaysia', 'Reykjavik, Iceland',
+        'Santiago, Chile', 'Istanbul, Turkiye', 'Casablanca, Morocco', 'Amsterdam, Netherlands', 'Prague, Czechia', 'Jakarta, Indonesia',
+        'Doha, Qatar', 'Athens, Greece', 'Buenos Aires, Argentina', 'Warsaw, Poland', 'Copenhagen, Denmark', 'Manila, Philippines',
+        'Lagos, Nigeria', 'Montreal, Canada', 'Madrid, Spain', 'Vienna, Austria', 'Kigali, Rwanda', 'Lahore, Pakistan', 'Hanoi, Vietnam',
+        'Bucharest, Romania', 'Zagreb, Croatia', 'Tallinn, Estonia', 'Beirut, Lebanon', 'Muscat, Oman', 'Edinburgh, Scotland',
+        'Quito, Ecuador', 'San Jose, Costa Rica', 'Kampala, Uganda', 'Colombo, Sri Lanka', 'Brussels, Belgium', 'Vilnius, Lithuania',
+        'Tunis, Tunisia', 'Kingston, Jamaica', 'Lusaka, Zambia', 'Split, Croatia', 'Perth, Australia', 'Ulaanbaatar, Mongolia',
+        'Lyon, France', 'Incheon, South Korea', 'Curitiba, Brazil', 'Porto, Portugal', 'Fukuoka, Japan', 'Merida, Mexico',
+        'Antwerp, Belgium', 'Durban, South Africa', 'Christchurch, New Zealand', 'Salvador, Brazil', 'Geneva, Switzerland', 'Busan, South Korea',
+        'Valencia, Spain', 'Adelaide, Australia', 'Marrakesh, Morocco', 'Rotterdam, Netherlands'
+      ];
+      const extraIncompleteNames = [
+        'Kai Navarro', 'Jasmine Ekwueme', 'Omar Beltran', 'Talia Mercer', 'Felix Andrade', 'Sana Milosevic', 'Rafael Kimani',
+        'Bianca Solberg', 'Yusuf Karim', 'Danica Morel', 'Thiago Pires', 'Anika Bhandari', 'Milan Soro', 'Kiara Estevez',
+        'Zane Motloung', 'Aisha Darwish', 'Nico Serrano', 'Farah Jovanovic', 'Teo Markovic', 'Ines Baptiste', 'Rami Abdel',
+        'Selene Costa', 'Bruno Tadesse', 'Mira Hoxha', 'Jonas da Silva', 'Alina Petrescu', 'Karim Benali', 'Nadia Fedorova',
+        'Bastien Moyo', 'Lina Carvajal', 'Samir Haddou', 'Elodie Mensima', 'Tomas Ionescu', 'Yara Chitsulo', 'Cian Duarte'
+      ];
+      const extraIncompleteCities = [
+        'Recife, Brazil', 'Abuja, Nigeria', 'Guadalajara, Mexico', 'Marseille, France', 'Cordoba, Argentina', 'Skopje, North Macedonia',
+        'Mombasa, Kenya', 'Bergen, Norway', 'Amman, Jordan', 'Quebec City, Canada', 'Fortaleza, Brazil', 'Kathmandu, Nepal',
+        'Bratislava, Slovakia', 'Panama City, Panama', 'Gaborone, Botswana', 'Alexandria, Egypt', 'Monterrey, Mexico',
+        'Sarajevo, Bosnia and Herzegovina', 'Belgrade, Serbia', 'Port-au-Prince, Haiti', 'Algiers, Algeria', 'Florianopolis, Brazil',
+        'Addis Ababa, Ethiopia', 'Tirana, Albania', 'Maputo, Mozambique', 'Cluj-Napoca, Romania', 'Rabat, Morocco', 'Sofia, Bulgaria',
+        'Harare, Zimbabwe', 'Cusco, Peru', 'Oran, Algeria', 'Kumasi, Ghana', 'Timisoara, Romania', 'Blantyre, Malawi', 'Coimbra, Portugal'
+      ];
+      const extraIncompleteMovements = [27, 34, 29, 41, 31, 45, 28, 38, 30, 43, 32, 47, 33, 40, 35, 44, 36, 42, 37, 48, 39, 46, 27, 41, 29, 45, 31, 43, 34, 47, 28, 40, 32, 44, 30];
+      const metroEntries = [
+        {
+          userId: 'sample-metro-1',
+          name: 'Mitchell Reeves',
+          sex: 'male',
+          age: 29,
+          city: 'Sydney, Australia',
+          finishTime: ((2 * 60) + 1) * 60 * 1000,
+          completedAt: '2026-03-09T00:00:00.000Z',
+          isSample: true
+        },
+        {
+          userId: 'sample-metro-2',
+          name: 'Tiana Brooks',
+          sex: 'female',
+          age: 34,
+          city: 'Melbourne, Australia',
+          finishTime: ((2 * 60) + 14) * 60 * 1000,
+          completedAt: '2026-03-09T00:00:00.000Z',
+          isSample: true
+        },
+        {
+          userId: 'sample-metro-3',
+          name: 'Cooper Lang',
+          sex: 'male',
+          age: 41,
+          city: 'Sydney, Australia',
+          finishTime: ((2 * 60) + 29) * 60 * 1000,
+          completedAt: '2026-03-09T00:00:00.000Z',
+          isSample: true
+        },
+        {
+          userId: 'sample-metro-4',
+          name: 'Amara Sutton',
+          sex: 'female',
+          age: 27,
+          city: 'Melbourne, Australia',
+          finishTime: ((2 * 60) + 43) * 60 * 1000,
+          completedAt: '2026-03-09T00:00:00.000Z',
+          isSample: true
+        },
+        {
+          userId: 'sample-metro-5',
+          name: 'Jordan Pike',
+          sex: 'male',
+          age: 38,
+          city: 'Sydney, Australia',
+          finishTime: 79 * 60 * 1000,
+          completedAt: '2026-03-09T00:00:00.000Z',
+          lastIdx: 43,
+          isSample: true
+        },
+        {
+          userId: 'sample-metro-6',
+          name: 'Sienna Hart',
+          sex: 'female',
+          age: 31,
+          city: 'Melbourne, Australia',
+          finishTime: 94 * 60 * 1000,
+          completedAt: '2026-03-09T00:00:00.000Z',
+          lastIdx: 36,
+          isSample: true
+        }
+      ];
+      const sampleResults = [];
+      const totalEntries = maleNames.length + femaleNames.length;
+      const minTime = ((1 * 60) + 56) * 60 * 1000;
+      const maxTime = ((2 * 60) + 50) * 60 * 1000;
+      const stepTime = Math.round((maxTime - minTime) / (totalEntries - 1));
+      const completedEntries = 58;
+
+      for (let i = 0; i < totalEntries; i += 1) {
+        const isMale = i % 2 === 0;
+        const sourceIndex = Math.floor(i / 2);
+        const age = 20 + ((i * 3) % 43);
+        const finishTime = minTime + (stepTime * i);
+        const record = {
+          userId: `sample-${i + 1}`,
+          name: isMale ? maleNames[sourceIndex] : femaleNames[sourceIndex],
+          sex: isMale ? 'male' : 'female',
+          age,
+          city: cities[i],
+          finishTime,
+          completedAt: '2026-03-09T00:00:00.000Z',
+          isSample: true
+        };
+
+        if (i >= completedEntries) {
+          record.lastIdx = 27 + ((i - completedEntries) % 22);
+        }
+
+        sampleResults.push(record);
+      }
+
+      for (let i = 0; i < extraIncompleteNames.length; i += 1) {
+        sampleResults.push({
+          userId: `sample-extra-${i + 1}`,
+          name: extraIncompleteNames[i],
+          sex: i % 2 === 0 ? 'male' : 'female',
+          age: 22 + ((i * 2) % 37),
+          city: extraIncompleteCities[i],
+          finishTime: (60 + (i * 2)) * 60 * 1000,
+          completedAt: '2026-03-09T00:00:00.000Z',
+          lastIdx: extraIncompleteMovements[i],
+          isSample: true
+        });
+      }
+
+      sampleResults.push(...metroEntries);
+
+      return sampleResults;
+    }
+
+    function purgeRecordsByName(nameToRemove) {
+      const storedResults = JSON.parse(localStorage.getItem('50of50_results')) || [];
+      const normalizedName = nameToRemove.trim().toLowerCase();
+      const filteredResults = storedResults.filter(record => {
+        return String(record.name || '').trim().toLowerCase() !== normalizedName;
+      });
+
+      if (filteredResults.length !== storedResults.length) {
+        localStorage.setItem('50of50_results', JSON.stringify(filteredResults));
+      }
+
+      return filteredResults;
+    }
+
+    function isRemovedSampleRecord(record) {
+      return REMOVED_SAMPLE_RECORDS.some(removedRecord => {
+        const lastMovementNumber = typeof record.lastIdx === 'number' ? record.lastIdx + 1 : null;
+        return record.name === removedRecord.name
+          && record.age === removedRecord.age
+          && record.sex === removedRecord.sex
+          && record.city === removedRecord.city
+          && formatTime(record.finishTime) === removedRecord.finishTime
+          && lastMovementNumber === removedRecord.lastMovementNumber;
+      });
+    }
+
     function updateTable() {
       const sexFilter = document.getElementById('sexFilter').value;
       const ageFilter = document.getElementById('ageFilter').value;
       const currentUser = window.authStore.getCurrentUser();
-      const results = JSON.parse(localStorage.getItem('50of50_results')) || [];
+      const storedResults = purgeRecordsByName('Cameron Bolt');
+      const results = buildSampleResults().filter(record => !isRemovedSampleRecord(record)).concat(storedResults);
 
       let filtered = results.filter(r => {
         if (sexFilter && r.sex !== sexFilter) return false;
@@ -176,22 +394,23 @@
         return true;
       });
 
-      // Separate finishers and quitters
       const finishers = filtered.filter(r => typeof r.lastIdx !== 'number' || r.lastIdx >= 49);
       const quitters = filtered.filter(r => typeof r.lastIdx === 'number' && r.lastIdx < 49);
       finishers.sort((a, b) => a.finishTime - b.finishTime);
-      quitters.sort((a, b) => (b.lastIdx ?? 0) - (a.lastIdx ?? 0));
+      quitters.sort((a, b) => (b.lastIdx ?? 0) - (a.lastIdx ?? 0) || a.finishTime - b.finishTime);
       filtered = finishers.concat(quitters);
+      filtered = filtered.filter((record, idx) => !HIDDEN_RANKINGS.has(idx + 1));
 
       const tbody = document.getElementById('recordsBody');
       
       if (filtered.length === 0) {
-        tbody.innerHTML = '<tr class="no-records"><td colspan="6">No records found</td></tr>';
+        tbody.innerHTML = '<tr class="no-records"><td colspan="7">No records found</td></tr>';
         return;
       }
 
       tbody.innerHTML = filtered.map((record, idx) => {
         const isCurrentUser = currentUser && record.userId === currentUser.id;
+        const entryBadge = record.isSample ? '<span class="entry-badge">Exhibition</span>' : '';
         // Show last completed movement if available, else 'Completed All'
         let lastMovement = 'Completed All';
         if (typeof record.lastIdx === 'number' && record.lastIdx < 49) {
@@ -201,7 +420,7 @@
         }
         return `<tr class="${isCurrentUser ? 'current-user' : ''}">
           <td class="rank">#${idx + 1}</td>
-          <td><strong>${record.name}</strong></td>
+          <td><strong>${record.name}</strong>${entryBadge}</td>
           <td>${record.age}</td>
           <td>${record.sex}</td>
           <td>${record.city}</td>
@@ -227,10 +446,11 @@
         document.getElementById('competeBtn').textContent = window.authStore.hasChallengeAccess(currentUser) ? 'Start Challenge' : 'Unlock Challenge';
       }
 
-      document.getElementById('competeBtn').onclick = function() {
+      document.getElementById('competeBtn').onclick = async function() {
+        const liveUser = await window.authStore.syncChallengeAccessFromServer(window.authStore.getCurrentUser());
         sessionStorage.removeItem('50of50_quit_state');
         sessionStorage.removeItem('50of50_quit_idx');
-        window.location.href = currentUser ? window.authStore.getChallengeEntryPath(currentUser) : 'signin.html';
+        window.location.href = liveUser ? window.authStore.getChallengeEntryPath(liveUser) : 'signin.html';
       };
 
       updateTable();

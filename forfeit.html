@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Challenge Forfeited - 50 of 50</title>
+  <script src="auth.js"></script>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #160b0b 0%, #271616 100%);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      box-sizing: border-box;
+    }
+    .shell {
+      width: min(760px, 100%);
+      background: rgba(15, 15, 15, 0.95);
+      border: 1px solid #412020;
+      border-radius: 18px;
+      padding: 32px;
+      box-shadow: 0 16px 60px rgba(0, 0, 0, 0.35);
+    }
+    h1 {
+      margin-top: 0;
+      color: #ff9a9a;
+    }
+    .muted {
+      color: rgba(255, 255, 255, 0.76);
+      line-height: 1.6;
+    }
+    .reason {
+      margin: 20px 0;
+      padding: 16px;
+      border-radius: 12px;
+      background: rgba(255, 125, 125, 0.08);
+      border: 1px solid rgba(255, 125, 125, 0.25);
+      font-weight: 700;
+      color: #ffb0b0;
+    }
+    .counts {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 12px;
+      margin: 20px 0;
+    }
+    .count-card {
+      background: #171717;
+      border: 1px solid #292929;
+      border-radius: 12px;
+      padding: 14px;
+    }
+    .count-card strong {
+      display: block;
+      font-size: 24px;
+      margin-top: 6px;
+    }
+    .logs {
+      margin-top: 24px;
+      background: #111;
+      border-radius: 12px;
+      border: 1px solid #262626;
+      padding: 16px;
+      max-height: 260px;
+      overflow: auto;
+    }
+    .logs ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+    .actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 24px;
+    }
+    .btn {
+      border: 0;
+      border-radius: 10px;
+      padding: 14px 18px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .btn-primary {
+      background: #d5a43a;
+      color: #111;
+    }
+    .btn-secondary {
+      background: #2a2a2a;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <h1>Challenge forfeited</h1>
+    <p class="muted">
+      This attempt has been forfeited because multiple movement completion times were outside the allowed time integrity limits. This event entry has been used. Purchase a new entry to start another official attempt.
+    </p>
+
+    <div class="reason" id="forfeitReason">Loading forfeit reason...</div>
+
+    <div class="counts" id="forfeitCounts"></div>
+
+    <section class="logs">
+      <h2 style="margin-top:0; font-size:18px;">Recent suspicious timing logs</h2>
+      <ul id="forfeitLogs"></ul>
+    </section>
+
+    <div class="actions">
+      <button class="btn btn-primary" type="button" id="buyNewEntryBtn">Buy new challenge entry</button>
+      <button class="btn btn-secondary" type="button" onclick="window.location.href='index.html'">Home</button>
+    </div>
+  </main>
+
+  <script>
+    const FORFEIT_DETAILS_KEY = '50of50_forfeit_details';
+
+    function readDetails() {
+      try {
+        return JSON.parse(sessionStorage.getItem(FORFEIT_DETAILS_KEY)) || null;
+      } catch (error) {
+        return null;
+      }
+    }
+
+    function renderCounts(counts) {
+      const host = document.getElementById('forfeitCounts');
+      host.innerHTML = `
+        <div class="count-card">Severe flags<strong>${counts?.severe || 0}</strong></div>
+        <div class="count-card">Moderate flags<strong>${counts?.moderate || 0}</strong></div>
+        <div class="count-card">Light flags<strong>${counts?.light || 0}</strong></div>
+        <div class="count-card">Total flags<strong>${counts?.totalFlags || 0}</strong></div>
+      `;
+    }
+
+    function renderLogs(logs) {
+      const list = document.getElementById('forfeitLogs');
+      if (!logs || logs.length === 0) {
+        list.innerHTML = '<li>No suspicious timing logs were recorded.</li>';
+        return;
+      }
+
+      list.innerHTML = logs.map((log) => {
+        return `<li>${log.movementName} | ${log.bucket} flag | ${log.elapsedSeconds}s (${Math.round(log.ratio * 100)}% of minimum total)</li>`;
+      }).join('');
+    }
+
+    (function initForfeitPage() {
+      const details = readDetails();
+      const reasonEl = document.getElementById('forfeitReason');
+
+      if (!details) {
+        reasonEl.textContent = 'This attempt was forfeited due to timing integrity rules.';
+        renderCounts(null);
+        renderLogs([]);
+      } else {
+        reasonEl.textContent = details.reason || 'This attempt was forfeited due to timing integrity rules.';
+        renderCounts(details.counts);
+        renderLogs(details.recentLogs);
+      }
+
+      document.getElementById('buyNewEntryBtn').addEventListener('click', function() {
+        if (!window.authStore || !window.authStore.getCurrentUser()) {
+          window.location.href = 'signin.html';
+          return;
+        }
+
+        window.location.href = 'payment.html';
+      });
+    })();
+  </script>
+</body>
+</html>

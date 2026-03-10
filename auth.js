@@ -2,6 +2,22 @@
   const USERS_KEY = "50of50_users";
   const CURRENT_USER_KEY = "50of50_currentUser";
 
+  function getApiBaseUrl() {
+    const host = window.location.hostname;
+    const isLocalHost = host === "localhost" || host === "127.0.0.1" || host === "::1";
+    const isAppServer = window.location.port === "3001";
+
+    if (isLocalHost && !isAppServer) {
+      return "http://localhost:3001";
+    }
+
+    return window.location.origin;
+  }
+
+  function apiUrl(path) {
+    return getApiBaseUrl() + path;
+  }
+
   function parseStoredJson(key, fallback) {
     try {
       const raw = localStorage.getItem(key);
@@ -14,12 +30,18 @@
   function normalizeUser(user) {
     if (!user) return null;
 
-    const challengeAccess = Boolean(user.challengeAccess);
+    const paymentConsumedAt = user.paymentConsumedAt || user.entryConsumedAt || null;
+    const challengeAccess = Boolean(user.challengeAccess) && !paymentConsumedAt;
+    const paymentStatus = paymentConsumedAt
+      ? "consumed"
+      : (challengeAccess ? "paid" : (user.paymentStatus || "pending"));
+
     return {
       ...user,
       challengeAccess,
-      paymentStatus: challengeAccess ? "paid" : (user.paymentStatus || "pending"),
+      paymentStatus,
       paymentUnlockedAt: user.paymentUnlockedAt || null,
+      paymentConsumedAt,
       accessSource: user.accessSource || null,
       devBypass: Boolean(user.devBypass)
     };
@@ -102,6 +124,7 @@
       challengeAccess: true,
       paymentStatus: "paid",
       paymentUnlockedAt: new Date().toISOString(),
+      paymentConsumedAt: null,
       accessSource: config.source || "payment-placeholder",
       paymentReference: config.reference || null,
       devBypass: config.source === "dev-bypass"
@@ -118,20 +141,100 @@
     return unlockedUser;
   }
 
+  function revokeChallengeAccess(userId, options) {
+    const config = options || {};
+    const users = getUsers();
+    const index = users.findIndex((user) => user.id === userId);
+
+    if (index === -1) return null;
+
+    const revokedUser = normalizeUser({
+      ...users[index],
+      challengeAccess: false,
+      paymentStatus: config.paymentStatus || "pending",
+      paymentUnlockedAt: null,
+      paymentConsumedAt: null,
+      accessSource: config.source || null,
+      paymentReference: null,
+      devBypass: false
+    });
+
+    users[index] = revokedUser;
+    saveUsers(users);
+
+    const currentUser = getCurrentUser();
+    if (currentUser && currentUser.id === revokedUser.id) {
+      setCurrentUser(revokedUser);
+    }
+
+    return revokedUser;
+  }
+
+  function consumeChallengeAccess(userId, options) {
+    const config = options || {};
+    const users = getUsers();
+    const index = users.findIndex((user) => user.id === userId);
+
+    const currentUser = getCurrentUser();
+    const baseUser = index === -1
+      ? (currentUser && currentUser.id === userId ? currentUser : null)
+      : users[index];
+
+    if (!baseUser) return null;
+
+    const consumedUser = normalizeUser({
+      ...baseUser,
+      challengeAccess: false,
+      paymentStatus: "consumed",
+      paymentConsumedAt: config.consumedAt || new Date().toISOString(),
+      accessSource: config.source || baseUser.accessSource || "challenge-complete",
+      paymentReference: config.reference || baseUser.paymentReference || null,
+      devBypass: false
+    });
+
+    if (index === -1) {
+      users.push(consumedUser);
+    } else {
+      users[index] = consumedUser;
+    }
+
+    saveUsers(users);
+
+    if (currentUser && currentUser.id === consumedUser.id) {
+      setCurrentUser(consumedUser);
+    }
+
+    return consumedUser;
+  }
+
   function clearCurrentUser() {
     localStorage.removeItem(CURRENT_USER_KEY);
   }
 
   async function syncChallengeAccessFromServer(user) {
     const resolvedUser = normalizeUser(user || getCurrentUser());
-    if (!resolvedUser || resolvedUser.challengeAccess) return resolvedUser;
+    if (!resolvedUser) return resolvedUser;
 
     try {
-      const response = await fetch(`/api/payments/status?email=${encodeURIComponent(resolvedUser.email)}`);
+      const response = await fetch(apiUrl(`/api/payments/status?email=${encodeURIComponent(resolvedUser.email)}`));
       if (!response.ok) return resolvedUser;
 
       const data = await response.json();
-      if (!data.paid) return resolvedUser;
+      if (!data.paid) {
+        if (resolvedUser.devBypass) return resolvedUser;
+        return revokeChallengeAccess(resolvedUser.id, {
+          source: null,
+          paymentStatus: 'pending'
+        });
+      }
+
+      if (!data.accessAvailable) {
+        return consumeChallengeAccess(resolvedUser.id, {
+          source: "stripe-server-sync",
+          consumedAt: data.payment?.consumedAt || null,
+          reference: data.payment?.stripeSessionId || null
+        });
+      }
 
       return grantChallengeAccess(resolvedUser.id, {
         source: "stripe-server-sync",
@@ -158,9 +261,13 @@
     hasChallengeAccess,
     getChallengeEntryPath,
     grantChallengeAccess,
+    revokeChallengeAccess,
+    consumeChallengeAccess,
     clearCurrentUser,
     syncChallengeAccessFromServer,
     shouldShowDeveloperBypass,
-    syncCurrentUserFromUsers
+    syncCurrentUserFromUsers,
+    getApiBaseUrl,
+    apiUrl
   };
 })();

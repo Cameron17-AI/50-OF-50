@@ -86,12 +86,21 @@ button { padding: 14px 16px; border: 0; border-radius: 12px; font-weight: 800; c
 	font-size: 1.15em;
 	padding: 20px 24px;
 	margin-top: 12px;
+	background: #d5a43a;
+	color: #111;
 }
 
 #resetBtn {
 	margin-top: 240px !important;
 }
-button:disabled { opacity: 0.4; cursor: not-allowed; }
+button:disabled { opacity: 1; cursor: not-allowed; }
+
+#doneBtn:disabled {
+	background: #d5a43a;
+	color: #111;
+	box-shadow: none;
+	cursor: pointer;
+}
 .finish { margin-top: 18px; font-size: 18px; }
 .hidden { display: none; }
 img, video { max-width: 100%; border-radius: 12px; margin-top: 12px; }

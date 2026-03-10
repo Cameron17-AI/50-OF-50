@@ -19,11 +19,26 @@
     .quit-btn { background: #c00; color: #fff; }
     .back-btn { background: #0c0; color: #fff; }
     .msg { font-size: 2em; font-weight: bold; margin-bottom: 24px; text-align: center; }
+    .submsg {
+      margin: -4px 0 30px;
+      padding: 14px 24px;
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      color: #ffd54a;
+      font-size: 1.65em;
+      font-weight: 900;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      text-align: center;
+      box-shadow: 0 0 28px rgba(255, 213, 74, 0.22);
+    }
   </style>
 </head>
 <body>
   <div id="overlay">
     <div class="msg">DON'T QUIT<br>KEEP GOING</div>
+    <div class="submsg">EARN YOUR RIGHT</div>
     <video id="dontquit-video" src="assets/videos/dontquit.mp4" autoplay loop muted playsinline></video>
     <div>
       <button class="back-btn" id="backToChallenge">Back to Challenge</button>
@@ -31,14 +46,24 @@
     </div>
   </div>
   <script>
+    const QUIT_STATE_KEY = '50of50_quit_state';
+    const QUIT_IDX_KEY = '50of50_quit_idx';
+    const RESUME_REQUESTED_KEY = '50of50_resume_requested';
+
+    function clearQuitProgress() {
+      sessionStorage.removeItem(QUIT_STATE_KEY);
+      sessionStorage.removeItem(QUIT_IDX_KEY);
+      sessionStorage.removeItem(RESUME_REQUESTED_KEY);
+    }
+
     document.getElementById('backToChallenge').onclick = function() {
-      // Go back to challenge page and resume state
+      sessionStorage.setItem(RESUME_REQUESTED_KEY, '1');
       window.location.href = 'challenge.html';
     };
     document.getElementById('quitForReal').onclick = function() {
-      // Save quit progress to results
+      // Save quit progress to results and clear resumable state
       try {
-        const idx = Number(sessionStorage.getItem('50of50_quit_idx'));
+        const idx = Number(sessionStorage.getItem(QUIT_IDX_KEY));
         const currentUser = JSON.parse(localStorage.getItem('50of50_currentUser'));
         let results = JSON.parse(localStorage.getItem('50of50_results')) || [];
         if (currentUser && !isNaN(idx)) {
@@ -54,7 +79,8 @@
           });
           localStorage.setItem('50of50_results', JSON.stringify(results));
         }
-      } catch(e) {}
+      } catch (e) {}
+      clearQuitProgress();
       window.location.href = 'records.html?quit=1';
     };
   </script>
