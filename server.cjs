@@ -77,6 +77,35 @@ function getContactRecipientEmail() {
 	return normalizeEmail(process.env.CONTACT_TO_EMAIL) || getSenderEmail();
 }
 
+function getEmailConfigurationError() {
+	const smtpHost = String(process.env.SMTP_HOST || '').trim();
+	const smtpUser = normalizeEmail(process.env.SMTP_USER);
+	const smtpPass = String(process.env.SMTP_PASS || '').trim();
+	const senderEmail = getSenderEmail();
+
+	if (!smtpHost) {
+		return 'SMTP_HOST is not configured.';
+	}
+
+	if (smtpHost.includes('@')) {
+		return 'SMTP_HOST must be a mail server hostname like smtp.gmail.com, not an email address.';
+	}
+
+	if (!smtpUser) {
+		return 'SMTP_USER is not configured.';
+	}
+
+	if (!smtpPass) {
+		return 'SMTP_PASS is not configured.';
+	}
+
+	if (!senderEmail) {
+		return 'FROM_EMAIL or SMTP_USER must provide the sender email address.';
+	}
+
+	return '';
+}
+
 function isPaidCheckoutSession(session) {
 	return session && session.payment_status === 'paid';
 }
@@ -466,6 +495,7 @@ app.post('/api/contact', async (req, res) => {
 	const message = typeof req.body?.message === 'string' ? req.body.message.trim() : '';
 	const contactRecipient = getContactRecipientEmail();
 	const senderEmail = getSenderEmail();
+	const emailConfigurationError = getEmailConfigurationError();
 
 	if (!name || !email || !message) {
 		return res.status(400).json({ error: 'Name, email, and message are required.' });
@@ -481,6 +511,10 @@ app.post('/api/contact', async (req, res) => {
 
 	if (!contactRecipient || !senderEmail) {
 		return res.status(503).json({ error: 'Contact email is not configured on the server.' });
+	}
+
+	if (emailConfigurationError) {
+		return res.status(503).json({ error: emailConfigurationError });
 	}
 
 	try {
@@ -617,6 +651,12 @@ app.post('/certificate', async (req, res) => {
 		writeStream.on('finish', async () => {
 			try {
 				const senderEmail = getSenderEmail();
+				const emailConfigurationError = getEmailConfigurationError();
+
+				if (emailConfigurationError) {
+					throw new Error(emailConfigurationError);
+				}
+
 				if (!senderEmail) {
 					throw new Error('Certificate email sender is not configured.');
 				}
