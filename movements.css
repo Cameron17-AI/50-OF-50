@@ -231,6 +231,28 @@ input:focus, select:focus{border-color: rgba(217,180,143,.65)}
   height: 100%;
   object-fit: cover;
   border-radius: 14px;
+  opacity: 0;
+  transition: opacity 0.22s ease;
+}
+
+.card__poster{
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 14px;
+  opacity: 1;
+  transition: opacity 0.22s ease;
+}
+
+.card--playing .card__video{
+  opacity: 1;
+}
+
+.card--playing .card__poster{
+  opacity: 0;
 }
 
 .card__top{

@@ -57,6 +57,37 @@ function matches(m, query, cat) {
   return qok && cok;
 }
 
+function stillPathFor(videoPath) {
+  if (!videoPath) return '';
+
+  const trimmedPath = String(videoPath).trim().replace(/^\/+/, '');
+  const fileName = trimmedPath.split('/').filter(Boolean).pop() || trimmedPath;
+  const baseName = fileName.toLowerCase().endsWith('.mp4') ? fileName.slice(0, -4) : fileName;
+  return `assets/video-stills/${baseName}.jpg`;
+}
+
+function prepareVideo(card, video) {
+  if (!card || !video || video.dataset.prepared === '1') {
+    return;
+  }
+
+  video.dataset.prepared = '1';
+  video.addEventListener('play', () => {
+    card.classList.add('card--playing');
+  });
+
+  video.addEventListener('ended', () => {
+    video.currentTime = 0;
+    card.classList.remove('card--playing');
+  });
+
+  video.addEventListener('pause', () => {
+    if (video.currentTime === 0 || video.ended) {
+      card.classList.remove('card--playing');
+    }
+  });
+}
+
 function render() {
   const q = searchEl.value || "";
   const cat = filterEl.value || "all";
@@ -82,10 +113,12 @@ function render() {
     else if (m.id === 18) videoSrc = 'assets/videos/no.18temposquats.mp4';
     else if (m.id === 19) videoSrc = 'assets/videos/no.19russiantwists.mp4';
     else if (m.id === 20) videoSrc = 'assets/videos/no.20bearcrawlsteps.mp4';
+    const stillSrc = stillPathFor(videoSrc);
     return `
       <article class="card card--overlay" data-id="${m.id}" onmouseenter="playMovementVideo(this)" onmouseleave="pauseMovementVideo(this)">
         <div class="card__video-bg">
-            <video class="card__video" muted loop playsinline${videoSrc ? ` data-video-path='${videoSrc}'` : ''}></video>
+            <img class="card__poster" src="${stillSrc}" alt="${m.name}" loading="lazy" decoding="async">
+            <video class="card__video" muted playsinline preload="none"${videoSrc ? ` data-video-path="${videoSrc}"` : ''}></video>
             <div class="card__overlay-content">
               <div class="card__top">
                 <div class="badge">${labelFor(m.category)}</div>
@@ -100,11 +133,8 @@ function render() {
     `;
   }).join("");
 
-  grid.querySelectorAll('.card__video').forEach((videoEl) => {
-    const videoPath = videoEl.getAttribute('data-video-path');
-    if (videoPath) {
-      setVideoElementSource(videoEl, videoPath);
-    }
+  grid.querySelectorAll('.card').forEach((card) => {
+    prepareVideo(card, card.querySelector('.card__video'));
   });
 }
 
@@ -126,8 +156,21 @@ async function init() {
 
 function playMovementVideo(card) {
   const video = card.querySelector('.card__video');
-  if (video && video.src) {
-    video.play();
+  if (!video) {
+    return;
+  }
+
+  prepareVideo(card, video);
+
+  const videoPath = video.getAttribute('data-video-path');
+  if (!video.src && videoPath) {
+    setVideoElementSource(video, videoPath);
+  }
+
+  video.loop = false;
+  video.currentTime = 0;
+  if (video.src) {
+    video.play().catch(() => {});
   }
 }
 
@@ -136,6 +179,7 @@ function pauseMovementVideo(card) {
   if (video) {
     video.pause();
     video.currentTime = 0;
+    card.classList.remove('card--playing');
   }
 }
 
