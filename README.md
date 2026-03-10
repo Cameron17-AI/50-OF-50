@@ -25,6 +25,7 @@ This is a Node/Express site with a static frontend, Stripe Checkout payments, SQ
 - `SMTP_USER`
 - `SMTP_PASS`
 - `FROM_EMAIL`
+- `CONTACT_TO_EMAIL` — optional destination for homepage contact messages. Defaults to `FROM_EMAIL`, then `SMTP_USER`.
 - `STRIPE_SECRET_KEY`
 - `STRIPE_WEBHOOK_SECRET`
 - `STRIPE_CURRENCY` — currently `aud`.
@@ -91,6 +92,7 @@ This repo now includes a `render.yaml` blueprint for Render.
 	- `SMTP_USER`
 	- `SMTP_PASS`
 	- `FROM_EMAIL`
+	- `CONTACT_TO_EMAIL` (optional, for contact-form messages)
 	- `STRIPE_SECRET_KEY`
 	- `STRIPE_WEBHOOK_SECRET`
 	- `STRIPE_CURRENCY=aud`

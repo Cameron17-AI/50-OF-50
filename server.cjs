@@ -69,6 +69,14 @@ function isValidEmail(email) {
 	return typeof email === 'string' && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email);
 }
 
+function getSenderEmail() {
+	return normalizeEmail(process.env.FROM_EMAIL) || normalizeEmail(process.env.SMTP_USER);
+}
+
+function getContactRecipientEmail() {
+	return normalizeEmail(process.env.CONTACT_TO_EMAIL) || getSenderEmail();
+}
+
 function isPaidCheckoutSession(session) {
 	return session && session.payment_status === 'paid';
 }
@@ -456,7 +464,8 @@ app.post('/api/contact', async (req, res) => {
 	const name = typeof req.body?.name === 'string' ? req.body.name.trim() : '';
 	const email = normalizeEmail(req.body?.email);
 	const message = typeof req.body?.message === 'string' ? req.body.message.trim() : '';
-	const contactRecipient = process.env.CONTACT_TO_EMAIL || process.env.FROM_EMAIL;
+	const contactRecipient = getContactRecipientEmail();
+	const senderEmail = getSenderEmail();
 
 	if (!name || !email || !message) {
 		return res.status(400).json({ error: 'Name, email, and message are required.' });
@@ -470,13 +479,13 @@ app.post('/api/contact', async (req, res) => {
 		return res.status(400).json({ error: 'Please enter a valid email address.' });
 	}
 
-	if (!contactRecipient) {
+	if (!contactRecipient || !senderEmail) {
 		return res.status(503).json({ error: 'Contact email is not configured on the server.' });
 	}
 
 	try {
 		await transporter.sendMail({
-			from: process.env.FROM_EMAIL,
+			from: senderEmail,
 			to: contactRecipient,
 			replyTo: email,
 			subject: `50 of 50 contact form: ${name}`,
@@ -494,7 +503,7 @@ app.post('/api/contact', async (req, res) => {
 		return res.json({ success: true });
 	} catch (err) {
 		console.error('Failed to send contact form email:', err);
-		return res.status(500).json({ error: 'Failed to send contact email.' });
+		return res.status(500).json({ error: err && err.message ? err.message : 'Failed to send contact email.' });
 	}
 });
 app.post('/register', (req, res) => {
@@ -607,9 +616,14 @@ app.post('/certificate', async (req, res) => {
 
 		writeStream.on('finish', async () => {
 			try {
+				const senderEmail = getSenderEmail();
+				if (!senderEmail) {
+					throw new Error('Certificate email sender is not configured.');
+				}
+
 				console.log('Sending certificate email to', email, 'with PDF', certPath);
 				await transporter.sendMail({
-					from: process.env.FROM_EMAIL,
+					from: senderEmail,
 					to: email,
 					subject: 'Your 50 of 50 Challenge Certificate',
 					text: `Congratulations, ${name}!\n\nYou completed the 50 of 50 Challenge.\nFinish Time: ${finishTime}\nGlobal Rank: ${globalRank}\nAge/Sex Rank: ${ageSexRank}`,
