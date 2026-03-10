@@ -72,7 +72,15 @@ function prepareVideo(card, video) {
   }
 
   video.dataset.prepared = '1';
-  video.addEventListener('play', () => {
+  video.addEventListener('loadeddata', () => {
+    video.dataset.loaded = '1';
+    if (video.dataset.hovering === '1') {
+      video.currentTime = 0;
+      video.play().catch(() => {});
+    }
+  });
+
+  video.addEventListener('playing', () => {
     card.classList.add('card--playing');
   });
 
@@ -161,6 +169,7 @@ function playMovementVideo(card) {
   }
 
   prepareVideo(card, video);
+  video.dataset.hovering = '1';
 
   const videoPath = video.getAttribute('data-video-path');
   if (!video.src && videoPath) {
@@ -168,8 +177,8 @@ function playMovementVideo(card) {
   }
 
   video.loop = false;
-  video.currentTime = 0;
-  if (video.src) {
+  if (video.dataset.loaded === '1' && video.src) {
+    video.currentTime = 0;
     video.play().catch(() => {});
   }
 }
@@ -177,6 +186,7 @@ function playMovementVideo(card) {
 function pauseMovementVideo(card) {
   const video = card.querySelector('.card__video');
   if (video) {
+    video.dataset.hovering = '0';
     video.pause();
     video.currentTime = 0;
     card.classList.remove('card--playing');
