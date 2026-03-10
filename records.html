@@ -355,22 +355,6 @@
       return sampleResults;
     }
 
-    function purgeRecordsByNames(namesToRemove) {
-      const storedResults = JSON.parse(localStorage.getItem('50of50_results')) || [];
-      const normalizedNames = new Set(
-        namesToRemove.map(name => String(name || '').trim().toLowerCase()).filter(Boolean)
-      );
-      const filteredResults = storedResults.filter(record => {
-        return !normalizedNames.has(String(record.name || '').trim().toLowerCase());
-      });
-
-      if (filteredResults.length !== storedResults.length) {
-        localStorage.setItem('50of50_results', JSON.stringify(filteredResults));
-      }
-
-      return filteredResults;
-    }
-
     function isRemovedSampleRecord(record) {
       return REMOVED_SAMPLE_RECORDS.some(removedRecord => {
         const lastMovementNumber = typeof record.lastIdx === 'number' ? record.lastIdx + 1 : null;
@@ -387,7 +371,7 @@
       const sexFilter = document.getElementById('sexFilter').value;
       const ageFilter = document.getElementById('ageFilter').value;
       const currentUser = window.authStore.getCurrentUser();
-      const storedResults = purgeRecordsByNames(['Cameron Bolt', 'Van Williams']);
+      const storedResults = JSON.parse(localStorage.getItem('50of50_results')) || [];
       const results = buildSampleResults().filter(record => !isRemovedSampleRecord(record)).concat(storedResults);
 
       let filtered = results.filter(r => {
