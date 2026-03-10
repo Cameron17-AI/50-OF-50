@@ -50,6 +50,23 @@
     const QUIT_IDX_KEY = '50of50_quit_idx';
     const RESUME_REQUESTED_KEY = '50of50_resume_requested';
 
+    function getQuitElapsedTime() {
+      try {
+        const rawState = sessionStorage.getItem(QUIT_STATE_KEY);
+        if (!rawState) return 0;
+
+        const parsedState = JSON.parse(rawState);
+        const storedStartTime = Number(parsedState?.startTime);
+        if (!Number.isFinite(storedStartTime) || storedStartTime <= 0) {
+          return 0;
+        }
+
+        return Math.max(0, Date.now() - storedStartTime);
+      } catch (error) {
+        return 0;
+      }
+    }
+
     function clearQuitProgress() {
       sessionStorage.removeItem(QUIT_STATE_KEY);
       sessionStorage.removeItem(QUIT_IDX_KEY);
@@ -73,7 +90,7 @@
             sex: currentUser.sex,
             age: currentUser.age,
             city: currentUser.city,
-            finishTime: Date.now() - (window.startTime || Date.now()),
+            finishTime: getQuitElapsedTime(),
             completedAt: new Date().toISOString(),
             lastIdx: idx
           });
