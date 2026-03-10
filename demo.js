@@ -24,6 +24,28 @@ function setButtons(state) {
   el("resetBtn").disabled = !state.canReset;
 }
 
+function playVideoWhenReady(videoEl) {
+  if (!videoEl) return;
+
+  const playbackToken = String(Date.now()) + Math.random().toString(16).slice(2);
+  videoEl.dataset.playbackToken = playbackToken;
+
+  const attemptPlayback = () => {
+    if (videoEl.dataset.playbackToken !== playbackToken) {
+      return;
+    }
+
+    videoEl.play().catch(() => {});
+  };
+
+  if (videoEl.readyState >= 2) {
+    attemptPlayback();
+    return;
+  }
+
+  videoEl.addEventListener('loadeddata', attemptPlayback, { once: true });
+}
+
 function updateMovementLockState() {
   const m = challenge[idx];
   const lockTimeSeconds = m.lockTime || 0;
@@ -66,7 +88,7 @@ function renderMovement() {
     setVideoElementSource(videoEl, m.video);
     videoEl.loop = true;
     videoEl.muted = true;
-    videoEl.play();
+    playVideoWhenReady(videoEl);
   } else {
     videoEl.src = "";
   }
