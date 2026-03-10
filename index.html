@@ -30,6 +30,9 @@
         <span id="authButtons"></span>
       </nav>
     </div>
+    <div class="container topbar__mobile">
+      <div id="mobileAuthButtons" class="mobile-auth"></div>
+    </div>
   </header>
 
   <main id="main">
@@ -286,6 +289,7 @@
       const currentUser = await window.authStore.syncChallengeAccessFromServer(window.authStore.getCurrentUser());
       const hasAccess = window.authStore.hasChallengeAccess(currentUser);
       const authButtonsEl = document.getElementById('authButtons');
+      const mobileAuthButtonsEl = document.getElementById('mobileAuthButtons');
       const heroRunnerBtn = document.getElementById('heroRunnerBtn');
       const quickChallengeBtn = document.getElementById('quickChallengeBtn');
       
@@ -295,16 +299,26 @@
           <a class="nav__cta" href="records.html">Global Records</a>
           <button onclick="logout()" style="background: none; border: none; color: inherit; cursor: pointer; text-decoration: underline; font-size: inherit;">Logout</button>
         `;
+        mobileAuthButtonsEl.innerHTML = `
+          <a class="nav__cta btn--demo-highlight" id="mobileChallengeBtn" href="${window.authStore.getChallengeEntryPath(currentUser)}">${hasAccess ? 'Start CHALLENGE' : 'Unlock CHALLENGE'}</a>
+          <a class="nav__cta" href="records.html">Records</a>
+          <button class="mobile-auth__logout" onclick="logout()" type="button">Logout</button>
+        `;
         heroRunnerBtn.href = getChallengeTarget(currentUser);
         heroRunnerBtn.classList.add('btn--demo-highlight');
         heroRunnerBtn.textContent = hasAccess ? 'Start CHALLENGE' : 'Unlock CHALLENGE';
         quickChallengeBtn.href = getChallengeTarget(currentUser);
         quickChallengeBtn.textContent = hasAccess ? 'Start CHALLENGE' : 'Unlock CHALLENGE';
         bindChallengeLink(document.getElementById('navChallengeBtn'));
+        bindChallengeLink(document.getElementById('mobileChallengeBtn'));
         bindChallengeLink(heroRunnerBtn);
         bindChallengeLink(quickChallengeBtn);
       } else {
         authButtonsEl.innerHTML = `
+          <a class="nav__cta" href="signin.html">Sign In</a>
+          <a class="nav__cta" href="register.html">Register</a>
+        `;
+        mobileAuthButtonsEl.innerHTML = `
           <a class="nav__cta" href="signin.html">Sign In</a>
           <a class="nav__cta" href="register.html">Register</a>
         `;

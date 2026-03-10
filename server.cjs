@@ -65,6 +65,10 @@ function normalizeEmail(email) {
 	return typeof email === 'string' ? email.trim().toLowerCase() : '';
 }
 
+function isValidEmail(email) {
+	return typeof email === 'string' && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email);
+}
+
 function isPaidCheckoutSession(session) {
 	return session && session.payment_status === 'paid';
 }
@@ -448,10 +452,55 @@ app.post('/api/payments/reset-entry', async (req, res) => {
 		return res.status(500).json({ error: 'Failed to reset event entry.' });
 	}
 });
+app.post('/api/contact', async (req, res) => {
+	const name = typeof req.body?.name === 'string' ? req.body.name.trim() : '';
+	const email = normalizeEmail(req.body?.email);
+	const message = typeof req.body?.message === 'string' ? req.body.message.trim() : '';
+	const contactRecipient = process.env.CONTACT_TO_EMAIL || process.env.FROM_EMAIL;
+
+	if (!name || !email || !message) {
+		return res.status(400).json({ error: 'Name, email, and message are required.' });
+	}
+
+	if (name.length < 2) {
+		return res.status(400).json({ error: 'Please enter a valid name.' });
+	}
+
+	if (!isValidEmail(email)) {
+		return res.status(400).json({ error: 'Please enter a valid email address.' });
+	}
+
+	if (!contactRecipient) {
+		return res.status(503).json({ error: 'Contact email is not configured on the server.' });
+	}
+
+	try {
+		await transporter.sendMail({
+			from: process.env.FROM_EMAIL,
+			to: contactRecipient,
+			replyTo: email,
+			subject: `50 of 50 contact form: ${name}`,
+			text: [
+				'New message from the 50 of 50 contact form.',
+				'',
+				`Name: ${name}`,
+				`Email: ${email}`,
+				'',
+				'Message:',
+				message
+			].join('\n')
+		});
+
+		return res.json({ success: true });
+	} catch (err) {
+		console.error('Failed to send contact form email:', err);
+		return res.status(500).json({ error: 'Failed to send contact email.' });
+	}
+});
 app.post('/register', (req, res) => {
 	const { email, name, age, sex } = req.body;
 	if (!email || !name || !age || !sex) return res.status(400).json({ error: 'All fields required.' });
-	if (typeof email !== 'string' || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return res.status(400).json({ error: 'Invalid email format.' });
+	if (!isValidEmail(email)) return res.status(400).json({ error: 'Invalid email format.' });
 	if (typeof name !== 'string' || name.length < 2) return res.status(400).json({ error: 'Name too short.' });
 	if (!Number.isInteger(age) || age < 0 || age > 120) return res.status(400).json({ error: 'Invalid age.' });
 	if (!['male', 'female', 'other'].includes(sex)) return res.status(400).json({ error: 'Invalid sex value.' });
@@ -493,7 +542,7 @@ app.delete('/users/:id', requireAdmin, (req, res) => {
 app.post('/certificate', async (req, res) => {
 	const { email, name, finishTime, globalRank, ageSexRank } = req.body;
 	if (!email || !name || !finishTime || !globalRank || !ageSexRank) return res.status(400).json({ error: 'All fields required.' });
-	if (typeof email !== 'string' || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return res.status(400).json({ error: 'Invalid email format.' });
+	if (!isValidEmail(email)) return res.status(400).json({ error: 'Invalid email format.' });
 	if (typeof name !== 'string' || name.length < 2) return res.status(400).json({ error: 'Name too short.' });
 	if (typeof finishTime !== 'string' || finishTime.length < 3) return res.status(400).json({ error: 'Invalid finish time.' });
 	if (!Number.isInteger(globalRank) || globalRank < 1) return res.status(400).json({ error: 'Invalid global rank.' });

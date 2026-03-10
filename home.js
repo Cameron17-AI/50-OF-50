@@ -15,7 +15,7 @@ function isValidEmail(email) {
 
 
 if (contactForm) {
-  contactForm.addEventListener("submit", (e) => {
+  contactForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const name = (contactName?.value || "").trim();
     const email = (contactEmail?.value || "").trim();
@@ -32,8 +32,36 @@ if (contactForm) {
       contactStatus.textContent = "Please enter a message.";
       return;
     }
-    // For now, just show a success message (no backend)
-    contactStatus.textContent = "Thank you! Your message has been received.";
-    contactForm.reset();
+
+    const submitButton = contactForm.querySelector('button[type="submit"]');
+
+    try {
+      if (submitButton) submitButton.disabled = true;
+      contactStatus.textContent = "Sending message...";
+
+      const contactUrl = window.authStore && typeof window.authStore.apiUrl === 'function'
+        ? window.authStore.apiUrl('/api/contact')
+        : '/api/contact';
+
+      const response = await fetch(contactUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, message })
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        contactStatus.textContent = data.error || 'Could not send your message right now.';
+        return;
+      }
+
+      contactStatus.textContent = "Thank you! Your message has been sent.";
+      contactForm.reset();
+    } catch (error) {
+      contactStatus.textContent = 'Could not send your message right now.';
+    } finally {
+      if (submitButton) submitButton.disabled = false;
+    }
   });
 }
