@@ -37,7 +37,7 @@
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	width: 360px;
+	width: min(360px, 100%);
 }
 .controls-section {
 	min-width: 160px;
@@ -49,7 +49,7 @@
 	justify-content: flex-start;
 }
 body { font-family: system-ui, Arial, sans-serif; margin: 0; background: #0b0b0b; color: #fff; }
-.wrap { max-width: 1200px; margin: 0 auto; padding: 24px; }
+.wrap { max-width: 1200px; margin: 0 auto; padding: 24px; overflow-x: hidden; }
 .main-content { display: flex; flex-direction: row; align-items: flex-start; justify-content: center; gap: 32px; margin-bottom: 24px; }
 .left-section { width: 100%; display: flex; flex-direction: row; gap: 32px; align-items: flex-start; justify-content: center; }
 .timer {
@@ -104,3 +104,79 @@ button:disabled { opacity: 1; cursor: not-allowed; }
 .finish { margin-top: 18px; font-size: 18px; }
 .hidden { display: none; }
 img, video { max-width: 100%; border-radius: 12px; margin-top: 12px; }
+
+@media (max-width: 900px) {
+	.wrap {
+		padding: 16px;
+	}
+
+	.main-content,
+	.left-section,
+	.video-flex-row {
+		flex-direction: column;
+		align-items: stretch;
+		gap: 16px;
+	}
+
+	.buttons-section,
+	.video-main,
+	.card {
+		width: 100%;
+		min-width: 0;
+	}
+
+	.buttons {
+		flex-direction: row;
+		flex-wrap: wrap;
+		justify-content: center;
+	}
+
+	.buttons button {
+		flex: 1 1 150px;
+	}
+
+	#doneBtn,
+	#resetBtn {
+		margin-top: 0 !important;
+	}
+
+	.video-container {
+		max-width: 100%;
+	}
+
+	.card {
+		flex: 1 1 auto;
+	}
+
+	.card h2#movementName {
+		font-size: 2em;
+	}
+
+	.meta {
+		font-size: 1.5em;
+		margin-bottom: 12px;
+	}
+
+	.timer {
+		font-size: clamp(42px, 12vw, 64px);
+	}
+}
+
+@media (max-width: 900px) and (orientation: landscape) {
+	.wrap {
+		padding: 12px;
+	}
+
+	.buttons {
+		gap: 6px;
+	}
+
+	.buttons button {
+		flex-basis: 120px;
+		padding: 12px 14px;
+	}
+
+	.timer {
+		font-size: clamp(36px, 8vw, 52px);
+	}
+}
