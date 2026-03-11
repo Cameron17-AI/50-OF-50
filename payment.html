@@ -232,6 +232,7 @@
   </div>
 
   <script>
+    const PENDING_CHECKOUT_SESSION_KEY = '50of50_pending_checkout_session';
     const currentUser = window.authStore.getCurrentUser();
     const paymentStatusEl = document.getElementById('paymentStatus');
     const paymentForm = document.getElementById('paymentForm');
@@ -255,9 +256,56 @@
       paymentStatusEl.className = 'status-message' + (type ? ' ' + type : '');
     }
 
+    function normalizeEmail(email) {
+      return typeof email === 'string' ? email.trim().toLowerCase() : '';
+    }
+
+    function getPendingCheckoutSessionId() {
+      return localStorage.getItem(PENDING_CHECKOUT_SESSION_KEY) || '';
+    }
+
+    function setPendingCheckoutSessionId(sessionId) {
+      if (!sessionId) return;
+      localStorage.setItem(PENDING_CHECKOUT_SESSION_KEY, sessionId);
+    }
+
+    function clearPendingCheckoutSessionId() {
+      localStorage.removeItem(PENDING_CHECKOUT_SESSION_KEY);
+    }
+
     async function syncPaidAccess() {
       const syncedUser = await window.authStore.syncChallengeAccessFromServer(currentUser);
       return syncedUser || window.authStore.getCurrentUser();
+    }
+
+    async function recoverPaidCheckoutFromPendingSession() {
+      const pendingSessionId = getPendingCheckoutSessionId();
+      if (!pendingSessionId || !currentUser) {
+        return null;
+      }
+
+      try {
+        const response = await fetch(window.authStore.apiUrl(`/api/stripe/checkout-session-status?session_id=${encodeURIComponent(pendingSessionId)}`));
+        const data = await response.json();
+
+        if (!response.ok || !data.paid) {
+          return null;
+        }
+
+        if (normalizeEmail(data.customerEmail) !== normalizeEmail(currentUser.email)) {
+          showStatus('A paid Stripe session was found, but it belongs to a different email address.', 'error');
+          return null;
+        }
+
+        clearPendingCheckoutSessionId();
+
+        return window.authStore.grantChallengeAccess(currentUser.id, {
+          source: 'stripe-checkout-recovery',
+          reference: data.stripeSessionId || pendingSessionId
+        });
+      } catch (error) {
+        return null;
+      }
     }
 
     async function resetEventEntry() {
@@ -331,6 +379,8 @@
           return;
         }
 
+        setPendingCheckoutSessionId(data.id);
+
         window.location.href = data.url;
       } catch (error) {
         showStatus('Could not reach the payment server. Start the backend and try again.', 'error');
@@ -345,7 +395,15 @@
     (async function initPaymentPage() {
       stripeModeCard.style.display = window.authStore.shouldShowDeveloperBypass() ? '' : 'none';
 
-      const syncedUser = await syncPaidAccess();
+      let syncedUser = await syncPaidAccess();
+      if (!window.authStore.hasChallengeAccess(syncedUser)) {
+        const recoveredUser = await recoverPaidCheckoutFromPendingSession();
+        if (recoveredUser) {
+          syncedUser = recoveredUser;
+          showStatus('Payment verified. Your event entry has been recovered on this account.', 'success');
+        }
+      }
+
       const hasAccess = window.authStore.hasChallengeAccess(syncedUser);
 
       if (params.get('canceled') === '1') {
@@ -353,6 +411,7 @@
       }
 
       if (hasAccess) {
+        clearPendingCheckoutSessionId();
         welcomeTitle.textContent = 'Event entry already unlocked';
         welcomeCopy.textContent = 'This account already has an unlocked official event entry. You can go straight into the runner.';
         paymentForm.innerHTML = '<div class="button-row"><button class="primary-btn" type="button" onclick="window.location.href=\'challenge.html\'">Start challenge</button><button class="ghost-btn" type="button" onclick="window.location.href=\'records.html\'">View records</button></div>';
