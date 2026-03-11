@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://50of50.com/sitemap.xml
