@@ -84,13 +84,26 @@
     const params = new URLSearchParams(window.location.search);
     const sessionId = params.get('session_id');
 
+    function normalizeEmail(email) {
+      return typeof email === 'string' ? email.trim().toLowerCase() : '';
+    }
+
+    function findStoredUserByEmail(email) {
+      const targetEmail = normalizeEmail(email);
+      if (!targetEmail || !window.authStore || typeof window.authStore.getUsers !== 'function') {
+        return null;
+      }
+
+      return window.authStore.getUsers().find((user) => normalizeEmail(user.email) === targetEmail) || null;
+    }
+
     function setStatus(message, type) {
       statusEl.textContent = message;
       statusEl.className = 'status' + (type ? ' ' + type : '');
     }
 
     async function finalizeAccess() {
-      const currentUser = window.authStore.getCurrentUser();
+      let currentUser = window.authStore.getCurrentUser();
 
       if (!sessionId) {
         setStatus('Missing Stripe session id. Go back to the payment page and try again.', 'error');
@@ -111,12 +124,21 @@
           return;
         }
 
+        const paidEmail = normalizeEmail(data.customerEmail);
+        if (!currentUser || normalizeEmail(currentUser.email) !== paidEmail) {
+          const matchingUser = findStoredUserByEmail(paidEmail);
+          if (matchingUser) {
+            window.authStore.setCurrentUser(matchingUser);
+            currentUser = matchingUser;
+          }
+        }
+
         if (!currentUser) {
-          setStatus('Payment was verified. Sign in to attach the unlocked event entry to your browser session.', 'success');
+          setStatus('Payment was verified, but this browser session could not find the matching account. Sign in with the same email address used for payment.', 'error');
           return;
         }
 
-        if ((currentUser.email || '').toLowerCase() !== (data.customerEmail || '').toLowerCase()) {
+        if (normalizeEmail(currentUser.email) !== paidEmail) {
           setStatus('Payment succeeded, but it belongs to a different email address than the signed-in account.', 'error');
           return;
         }
@@ -128,6 +150,9 @@
 
         challengeBtn.style.display = '';
         setStatus('Payment verified. Your one-time event challenge entry is now unlocked on this account. GET READY TO START CHALLENGE', 'success');
+        setTimeout(() => {
+          window.location.href = 'challenge.html';
+        }, 1200);
       } catch (error) {
         setStatus('Could not reach the payment server to confirm the Stripe session.', 'error');
       }
