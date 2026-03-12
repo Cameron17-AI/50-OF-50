@@ -188,6 +188,7 @@
     }
 
     const HIDDEN_RANKINGS = new Set([59, 61, 62, 63, 65, 69, 72, 75, 77, 80, 85]);
+    const HIDDEN_RECORD_NAMES = new Set(['Cameron Bolt']);
     const REMOVED_SAMPLE_RECORDS = [
       {
         name: 'Sana Milosevic',
@@ -370,12 +371,18 @@
       });
     }
 
+    function isHiddenRecord(record) {
+      return HIDDEN_RECORD_NAMES.has(record.name);
+    }
+
     function updateTable() {
       const sexFilter = document.getElementById('sexFilter').value;
       const ageFilter = document.getElementById('ageFilter').value;
       const currentUser = window.authStore.getCurrentUser();
       const storedResults = JSON.parse(localStorage.getItem('50of50_results')) || [];
-      const results = buildSampleResults().filter(record => !isRemovedSampleRecord(record)).concat(storedResults);
+      const results = buildSampleResults()
+        .filter(record => !isRemovedSampleRecord(record) && !isHiddenRecord(record))
+        .concat(storedResults.filter(record => !isHiddenRecord(record)));
 
       let filtered = results.filter(r => {
         if (sexFilter && r.sex !== sexFilter) return false;

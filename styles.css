@@ -95,6 +95,14 @@ button { padding: 14px 16px; border: 0; border-radius: 12px; font-weight: 800; c
 }
 button:disabled { opacity: 1; cursor: not-allowed; }
 
+.runner-header__button--locked,
+.runner-header__button:disabled {
+	background: #333 !important;
+	color: rgba(255,255,255,0.5) !important;
+	box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);
+	cursor: not-allowed !important;
+}
+
 #doneBtn:disabled {
 	background: #d5a43a;
 	color: #111;

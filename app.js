@@ -4,6 +4,7 @@ let startTime = null;
 let tick = null;
 let movementStartTime = null;
 let movementLockTimer = null;
+const NAV_LOCK_COMPLETED_MOVEMENTS = 2;
 const resolveVideoUrl = window.resolveVideoUrl || ((videoPath) => videoPath || '');
 const setVideoElementSource = window.setVideoElementSource || ((videoEl, videoPath) => {
   if (videoEl) {
@@ -37,6 +38,26 @@ function setButtons(state) {
   el("startBtn").disabled = !state.canStart;
   el("doneBtn").disabled  = !state.canDone;
   el("resetBtn").disabled = !state.canReset;
+}
+
+function isRunnerNavigationLocked() {
+  return Boolean(startTime) && idx >= NAV_LOCK_COMPLETED_MOVEMENTS;
+}
+
+function updateRunnerNavigationState() {
+  const locked = isRunnerNavigationLocked();
+  const lockedTitle = locked
+    ? "Locked after 2 completed movements. Use I'm done QUIT to forfeit this entry."
+    : "";
+
+  [el("homeBtn"), el("backBtn"), el("resetBtn")].forEach((buttonEl) => {
+    if (!buttonEl) return;
+
+    buttonEl.disabled = locked;
+    buttonEl.classList.toggle("runner-header__button--locked", locked);
+    buttonEl.setAttribute("aria-disabled", locked ? "true" : "false");
+    buttonEl.title = lockedTitle;
+  });
 }
 
 function playVideoWhenReady(videoEl) {
@@ -95,6 +116,7 @@ function renderMovement() {
   if (movementLockTimer) clearInterval(movementLockTimer);
   updateMovementLockState();
   movementLockTimer = setInterval(updateMovementLockState, 100);
+  updateRunnerNavigationState();
 }
 
 function startTimer() {
@@ -366,6 +388,7 @@ function resetUI() {
   el("finish").textContent = "";
   setIntegrityMessage('');
   setButtons({ canStart: true, canDone: false, canReset: false });
+  updateRunnerNavigationState();
 }
 
 async function finish() {
@@ -522,9 +545,28 @@ async function init() {
     renderMovement();
   });
 
-  el("resetBtn").addEventListener("click", resetUI);
+  el("resetBtn").addEventListener("click", () => {
+    if (isRunnerNavigationLocked()) {
+      return;
+    }
+
+    resetUI();
+  });
+
+  el("homeBtn").addEventListener("click", () => {
+    if (isRunnerNavigationLocked()) {
+      return;
+    }
+
+    clearQuitProgress();
+    window.location.href = 'index.html';
+  });
   
   el("backBtn").addEventListener("click", () => {
+    if (isRunnerNavigationLocked()) {
+      return;
+    }
+
     if (confirm("Are you sure? Your progress will be lost.")) {
       clearQuitProgress();
       window.location.href = 'records.html';
