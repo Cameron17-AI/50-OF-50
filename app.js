@@ -18,6 +18,7 @@ const RESUME_REQUESTED_KEY = '50of50_resume_requested';
 const FLAG_LOG_KEY = '50of50_flag_logs';
 const FORFEIT_DETAILS_KEY = '50of50_forfeit_details';
 const TIMING_SCALE_KEY = '50of50_timing_scale';
+const LOCKED_REFRESH_FORFEIT_KEY = '50of50_locked_refresh_forfeit';
 
 const FLAG_THRESHOLDS = {
   severe: { forfeitAt: 5, warnAt: [2, 4] },
@@ -26,6 +27,7 @@ const FLAG_THRESHOLDS = {
 };
 
 let integrityState = createIntegrityState();
+let allowRunnerUnload = false;
 
 const el = (id) => document.getElementById(id);
 
@@ -42,6 +44,51 @@ function setButtons(state) {
 
 function isRunnerNavigationLocked() {
   return Boolean(startTime) && idx >= NAV_LOCK_COMPLETED_MOVEMENTS;
+}
+
+function clearLockedRefreshForfeit() {
+  sessionStorage.removeItem(LOCKED_REFRESH_FORFEIT_KEY);
+}
+
+function armLockedRefreshForfeit() {
+  sessionStorage.setItem(LOCKED_REFRESH_FORFEIT_KEY, JSON.stringify({
+    idx,
+    startTime,
+    createdAt: new Date().toISOString()
+  }));
+}
+
+function consumeLockedRefreshForfeit() {
+  const rawState = sessionStorage.getItem(LOCKED_REFRESH_FORFEIT_KEY);
+  if (!rawState) {
+    return null;
+  }
+
+  clearLockedRefreshForfeit();
+
+  try {
+    return JSON.parse(rawState);
+  } catch (error) {
+    return null;
+  }
+}
+
+function allowRunnerPageExit() {
+  allowRunnerUnload = true;
+  clearLockedRefreshForfeit();
+}
+
+function protectLockedRunnerOnUnload(event) {
+  if (!isRunnerNavigationLocked() || allowRunnerUnload) {
+    return;
+  }
+
+  armLockedRefreshForfeit();
+
+  if (event && typeof event.preventDefault === 'function') {
+    event.preventDefault();
+    event.returnValue = '';
+  }
 }
 
 function updateRunnerNavigationState() {
@@ -316,6 +363,7 @@ async function forfeitChallenge(reason, entry) {
   stopTimer();
   if (movementLockTimer) clearInterval(movementLockTimer);
   clearQuitProgress();
+  allowRunnerPageExit();
   const currentUser = window.authStore?.getCurrentUser?.() || JSON.parse(localStorage.getItem('50of50_currentUser') || 'null');
   const consumedAt = new Date().toISOString();
   await consumeEntryForForfeit(currentUser, consumedAt);
@@ -359,9 +407,11 @@ function clearQuitProgress() {
   sessionStorage.removeItem(QUIT_STATE_KEY);
   sessionStorage.removeItem(QUIT_IDX_KEY);
   sessionStorage.removeItem(RESUME_REQUESTED_KEY);
+  clearLockedRefreshForfeit();
 }
 
 function resetUI() {
+  allowRunnerUnload = false;
   stopTimer();
   if (movementLockTimer) clearInterval(movementLockTimer);
   clearQuitProgress();
@@ -395,6 +445,7 @@ async function finish() {
   stopTimer();
   if (movementLockTimer) clearInterval(movementLockTimer);
   clearQuitProgress();
+  allowRunnerPageExit();
   const total = Date.now() - startTime;
   const currentUser = JSON.parse(localStorage.getItem('50of50_currentUser'));
   const localConsumedAt = new Date().toISOString();
@@ -495,6 +546,28 @@ async function loadChallenge() {
 
 async function init() {
   await loadChallenge();
+  const lockedRefreshState = consumeLockedRefreshForfeit();
+  if (lockedRefreshState) {
+    idx = Number.isFinite(lockedRefreshState.idx) ? lockedRefreshState.idx : idx;
+    startTime = lockedRefreshState.startTime || Date.now();
+
+    const currentMovement = challenge[Math.min(idx, Math.max(challenge.length - 1, 0))] || null;
+    await forfeitChallenge(
+      'Challenge forfeited because the runner was refreshed after 2 completed movements.',
+      {
+        createdAt: new Date().toISOString(),
+        movementId: currentMovement?.id || null,
+        movementName: currentMovement?.name || null,
+        bucket: 'refresh',
+        elapsedSeconds: 0,
+        hardLockSeconds: 0,
+        minimumTotalSeconds: 0,
+        ratio: 0
+      }
+    );
+    return;
+  }
+
   const quitState = sessionStorage.getItem(QUIT_STATE_KEY);
   const resumeRequested = sessionStorage.getItem(RESUME_REQUESTED_KEY) === '1';
 
@@ -559,6 +632,7 @@ async function init() {
     }
 
     clearQuitProgress();
+    allowRunnerPageExit();
     window.location.href = 'index.html';
   });
   
@@ -569,6 +643,7 @@ async function init() {
 
     if (confirm("Are you sure? Your progress will be lost.")) {
       clearQuitProgress();
+      allowRunnerPageExit();
       window.location.href = 'records.html';
     }
   });
@@ -581,10 +656,14 @@ async function init() {
       sessionStorage.setItem(QUIT_IDX_KEY, idx);
       sessionStorage.setItem(QUIT_STATE_KEY, JSON.stringify({ idx, startTime }));
       sessionStorage.removeItem(RESUME_REQUESTED_KEY);
+      allowRunnerPageExit();
       window.location.href = 'dontquit.html';
     });
   }
 }
+
+window.addEventListener('beforeunload', protectLockedRunnerOnUnload);
+window.addEventListener('pagehide', protectLockedRunnerOnUnload);
 
 init().catch((err) => {
   console.error(err);
