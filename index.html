@@ -310,6 +310,7 @@
         mobileAuthButtonsEl.innerHTML = `
           <a class="nav__cta btn--demo-highlight" id="mobileChallengeBtn" href="${window.authStore.getChallengeEntryPath(currentUser)}">${hasAccess ? 'Start CHALLENGE' : 'Unlock CHALLENGE'}</a>
           <a class="nav__cta" href="records.html">Records</a>
+          <a class="nav__cta" href="rules.html">Rules</a>
           <button class="mobile-auth__logout" onclick="logout()" type="button">Logout</button>
         `;
         heroRunnerBtn.href = getChallengeTarget(currentUser);
