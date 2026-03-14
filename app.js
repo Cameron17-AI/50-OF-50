@@ -628,24 +628,28 @@ async function init() {
 
   el("homeBtn").addEventListener("click", () => {
     if (isRunnerNavigationLocked()) {
+      // Home is locked after 2 movements
       return;
     }
-
     clearQuitProgress();
     allowRunnerPageExit();
     window.location.href = 'index.html';
   });
-  
+
   el("backBtn").addEventListener("click", () => {
     if (isRunnerNavigationLocked()) {
+      // After lock, show warning
+      if (confirm("Are you sure? Your progress will be lost.")) {
+        clearQuitProgress();
+        allowRunnerPageExit();
+        window.location.href = 'records.html';
+      }
       return;
     }
-
-    if (confirm("Are you sure? Your progress will be lost.")) {
-      clearQuitProgress();
-      allowRunnerPageExit();
-      window.location.href = 'records.html';
-    }
+    // Before lock, allow navigation without warning
+    clearQuitProgress();
+    allowRunnerPageExit();
+    window.location.href = 'records.html';
   });
 
   // Quit button event
