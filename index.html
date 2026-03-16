@@ -29,7 +29,8 @@
         <div class="brand__mark">50</div>
         <div class="brand__text">
           <div class="brand__title">50 of 50</div>
-          <div class="brand__tag">The Ultimate Fitness Challenge<br><span style="font-size:0.95em; font-weight:400; display:block;">50 Reps of 50 Exercises</span></div>
+          <div class="brand__tag">The Ultimate Fitness Challenge</div>
+          <div class="brand__sub">50 Reps of 50 Exercises</div>
         </div>
       </div>
 
@@ -38,7 +39,7 @@
         <a href="#how">How it works</a>
         <a href="movements.html">Movement list</a>
         <a href="rules.html">Rules</a>
-        <a href="#contact">Contact</a>
+        <a href="records.html">Global Records</a>
         <span id="authButtons"></span>
       </nav>
     </div>
@@ -48,46 +49,128 @@
   </header>
 
   <main id="main">
-    <section class="hero hero--brand">
-      <div class="hero__bg" aria-hidden="true"></div>
-      <div class="container hero__inner hero__brand-inner">
-        <div class="brand-hero">
-          <div class="brand-hero__mark">50</div>
-          <div class="brand-hero__text">
-            <div class="brand-hero__title">50 of 50</div>
-            <div class="brand-hero__subtitle">The Ultimate Fitness Challenge. 50 Reps of 50 Exercises</div>
+    <section class="homefold">
+      <div class="homefold__bg" aria-hidden="true"></div>
+      <div class="homefold__orb homefold__orb--left" aria-hidden="true"></div>
+      <div class="homefold__orb homefold__orb--right" aria-hidden="true"></div>
+
+      <div class="container homefold__grid">
+        <div class="homefold__copy">
+          <div class="homefold__watermark" aria-hidden="true">50</div>
+          <div class="homefold__intro">
+            <div class="homefold__intro-main">
+              <p class="pill homefold__pill">Competition open now</p>
+              <div class="homefold__season">2026 Competition</div>
+              <h1>THE ULITIMATE FITNESS CHALLENGE</h1>
+              <p class="homefold__lead">
+                <span class="homefold__lead-strong">Race the clock.</span>
+                <span class="homefold__lead-copy">Complete 50 exercises for 50 reps each and chase your place on the global leaderboard.</span>
+              </p>
+            </div>
+
+            <aside class="homefold__mobile-side" aria-label="Mobile proof preview">
+              <div class="homeproof-mini homeproof-mini--leaderboard">
+                <div class="homeproof-mini__eyebrow">Top times</div>
+                <div class="homeproof-mini__row">
+                  <span>#1 Liam</span>
+                  <strong>1:56:00</strong>
+                </div>
+                <div class="homeproof-mini__row">
+                  <span>#2 Olivia</span>
+                  <strong>1:56:41</strong>
+                </div>
+                <div class="homeproof-mini__row">
+                  <span>#3 Noah</span>
+                  <strong>1:57:22</strong>
+                </div>
+              </div>
+
+              <div class="homeproof-mini homeproof-mini--certificate">
+                <div class="homeproof-mini__eyebrow">Certificate</div>
+                <div class="homeproof-mini__certificate-frame">
+                  <iframe
+                    class="homeproof-mini__certificate-embed"
+                    src="certificate_sample.pdf#toolbar=0&navpanes=0&scrollbar=0&view=Fit"
+                    title="Small mobile finishing certificate preview"
+                    loading="lazy"
+                    scrolling="no"
+                  ></iframe>
+                </div>
+              </div>
+            </aside>
+          </div>
+
+          <ul class="homefold__ticks" aria-label="Competition highlights">
+            <li>No gym required.</li>
+            <li>Bench or chair only.</li>
+            <li>Global ranking + Finishing Certificate.</li>
+          </ul>
+
+          <div class="homefold__actions">
+            <a class="btn btn--demo-cta homefold__btn homefold__btn--demo" href="demo.html">
+              <span>START THE 3-MOVEMENT DEMO</span>
+              <span>Takes under 2 minutes - No account needed</span>
+            </a>
+            <a class="btn btn--primary homefold__btn homefold__btn--third" id="heroRunnerBtn" href="signin.html">Unlock Challenge</a>
+            <a class="btn btn--ghost homefold__btn homefold__btn--third" href="movements.html">See Movements</a>
+            <a class="btn btn--accent homefold__btn homefold__btn--third" href="records.html">Global Records</a>
+          </div>
+
+          <p class="homefold__demo-note">Start with the 3-movement demo. Takes under 2 minutes and no account is needed.</p>
+
+          <div class="homefold__entry">
+            <h2>Enter in 3 simple steps</h2>
+            <ol>
+              <li><a class="homefold__inline-link" href="register.html">Create an account</a> and open your competition dashboard.</li>
+              <li>Review the <a class="homefold__inline-link" href="movements.html">movement list</a> and <a class="homefold__inline-link" href="rules.html">rules</a>, then try the <a class="homefold__inline-link" href="demo.html">3-movement demo</a>.</li>
+              <li><a class="homefold__inline-link" id="entryChallengeLink" href="signin.html">Unlock the challenge</a> and start your official timed attempt.</li>
+            </ol>
           </div>
         </div>
-      </div>
-    </section>
 
-    <section class="hero">
-      <div class="hero__bg" aria-hidden="true"></div>
-      <div class="container hero__inner">
-        <p class="pill">Competition open now</p>
-        <h1><strong>EARN YOUR RIGHT</strong></h1>
-        <div style="margin-bottom: 12px; text-align: center;">
-          <span class="competition-highlight">2026 Competition</span>
+        <div class="homefold__visual">
+          <div class="homeproof homeproof--leaderboard">
+            <div class="homeproof__eyebrow">Current leaderboard</div>
+            <h2>Current top three</h2>
+            <div class="homeproof__rows">
+              <div class="homeproof__row">
+                <span>#1 Liam Bennett</span>
+                <strong>01:56:00</strong>
+              </div>
+              <div class="homeproof__row">
+                <span>#2 Olivia Santos</span>
+                <strong>01:56:41</strong>
+              </div>
+              <div class="homeproof__row">
+                <span>#3 Noah Castillo</span>
+                <strong>01:57:22</strong>
+              </div>
+            </div>
+            <a class="homeproof__link" href="records.html">View full rankings</a>
+          </div>
+
+          <div class="homeproof homeproof--review">
+            <div class="homeproof__eyebrow">Finisher review</div>
+            <blockquote>
+              “It starts like a workout and turns into a decision. The locked order, the fatigue, and the timer make it a real event.”
+            </blockquote>
+            <p class="homeproof__meta">Completed finisher, official attempt</p>
+            <div class="homeproof__certificate-block">
+              <div class="homeproof__eyebrow">Finishing certificate preview</div>
+              <div class="homecertificate-preview">
+                <div class="homecertificate-preview__frame">
+                  <iframe
+                    class="homecertificate-preview__embed"
+                    src="certificate_sample.pdf#toolbar=0&navpanes=0&scrollbar=0&view=Fit"
+                    title="Real sample finishing certificate preview"
+                    loading="lazy"
+                    scrolling="no"
+                  ></iframe>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <p class="hero__sub">
-          <span class="hero__sub--highlight">TIME yourself against the BEST IN THE WORLD</span><br>
-          <span class="hero__sub-copy">Automatically run and timed competition. 50 Reps of 50 Challenges</span><br>
-          <span style="font-size: 1rem; color: #bbb; display: block; margin-top: 4px;">Can you handle the Hardest Fitness Workout Challenge?</span>
-        </p>
-
-        <div class="hero__cta">
-          <a class="btn btn--primary" id="heroRunnerBtn" href="signin.html">Try the runner</a>
-          <a class="btn btn--demo-cta" href="demo.html">Demo (3 movements)</a>
-          <a class="btn btn--ghost" href="#movements-preview">See Movements</a>
-          <a class="btn btn--accent" href="records.html">Global Records</a>
-        </div>
-
-        <p style="max-width: 760px; margin: 18px auto 0; color: rgba(233, 238, 245, 0.78); line-height: 1.6; text-align: center;">
-          Start with the <a href="demo.html" style="text-decoration: underline;">3-movement demo</a>, study the full <a href="movements.html" style="text-decoration: underline;">movement list</a>, read the <a href="rules.html" style="text-decoration: underline;">official rules</a>, and compare times on the <a href="records.html" style="text-decoration: underline;">global records page</a>.
-        </p>
-
-        <div class="hero__note">
-          Founder attempt planned for <strong>17 June</strong> (built with my 50th birthday in mind).
         </div>
       </div>
     </section>
@@ -336,6 +419,7 @@
       const mobileAuthButtonsEl = document.getElementById('mobileAuthButtons');
       const heroRunnerBtn = document.getElementById('heroRunnerBtn');
       const quickChallengeBtn = document.getElementById('quickChallengeBtn');
+      const entryChallengeLink = document.getElementById('entryChallengeLink');
       
       if (currentUser) {
         authButtonsEl.innerHTML = `
@@ -354,23 +438,27 @@
         heroRunnerBtn.textContent = hasAccess ? 'Start CHALLENGE' : 'Unlock CHALLENGE';
         quickChallengeBtn.href = getChallengeTarget(currentUser);
         quickChallengeBtn.textContent = hasAccess ? 'Start CHALLENGE' : 'Unlock CHALLENGE';
+        if (entryChallengeLink) entryChallengeLink.href = getChallengeTarget(currentUser);
         bindChallengeLink(document.getElementById('navChallengeBtn'));
         bindChallengeLink(document.getElementById('mobileChallengeBtn'));
         bindChallengeLink(heroRunnerBtn);
         bindChallengeLink(quickChallengeBtn);
+        bindChallengeLink(entryChallengeLink);
       } else {
         authButtonsEl.innerHTML = `
-          <a class="nav__cta" href="signin.html">Sign In</a>
-          <a class="nav__cta" href="register.html">Register</a>
+          <a class="nav__cta nav__cta--guest" href="signin.html">Sign In</a>
+          <a class="nav__cta nav__cta--guest nav__cta--accent" href="register.html">Register</a>
         `;
         mobileAuthButtonsEl.innerHTML = `
-          <a class="nav__cta" href="signin.html">Sign In</a>
-          <a class="nav__cta" href="register.html">Register</a>
+          <a class="nav__cta nav__cta--guest" href="signin.html">Sign In</a>
+          <a class="nav__cta nav__cta--guest nav__cta--accent" href="register.html">Register</a>
         `;
         heroRunnerBtn.href = 'signin.html';
-        heroRunnerBtn.textContent = 'Try the runner';
+        heroRunnerBtn.classList.remove('btn--demo-highlight');
+        heroRunnerBtn.textContent = 'Unlock Challenge';
         quickChallengeBtn.href = 'signin.html';
         quickChallengeBtn.textContent = 'Start CHALLENGE';
+        if (entryChallengeLink) entryChallengeLink.href = 'signin.html';
       }
     }
 
