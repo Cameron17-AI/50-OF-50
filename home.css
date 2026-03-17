@@ -645,7 +645,7 @@ code{background:rgba(255,255,255,.08);padding:2px 6px;border-radius:8px}
 
 .home-mobile__hero-copy{
   min-width:0;
-  padding-left:6px;
+  padding-left:0;
 }
 
 .home-mobile__hero-side{
@@ -690,7 +690,7 @@ code{background:rgba(255,255,255,.08);padding:2px 6px;border-radius:8px}
   max-width:none;
   display:grid;
   gap:1px;
-  font-size:17px;
+  font-size:14px;
   line-height:.86;
 }
 
