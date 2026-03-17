@@ -24,6 +24,22 @@ function setButtons(state) {
   el("resetBtn").disabled = !state.canReset;
 }
 
+function scrollActiveDemoIntoView() {
+  if (!window.matchMedia('(max-width: 900px)').matches) {
+    return;
+  }
+
+  const activeDemo = document.querySelector('.main-content');
+  if (!activeDemo) {
+    return;
+  }
+
+  requestAnimationFrame(() => {
+    const top = activeDemo.getBoundingClientRect().top + window.scrollY;
+    window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+  });
+}
+
 function playVideoWhenReady(videoEl) {
   if (!videoEl) return;
 
@@ -219,6 +235,7 @@ async function init() {
     setButtons({ canStart: false, canDone: true, canReset: true });
     startTimer();
     renderMovement();
+    scrollActiveDemoIntoView();
   });
 
   el("doneBtn").addEventListener("click", () => {
