@@ -701,7 +701,27 @@ code{background:rgba(255,255,255,.08);padding:2px 6px;border-radius:8px}
 }
 
 .home-mobile-mini--certificate-lowered{
-  margin-top:64px;
+  margin-top:118px;
+}
+
+.home-mobile-mini--leaderboard{
+  padding:8px 8px 7px;
+  border-radius:14px;
+}
+
+.home-mobile-mini--leaderboard .home-mobile-mini__eyebrow{
+  margin-bottom:5px;
+  font-size:8px;
+}
+
+.home-mobile-mini--leaderboard .home-mobile-mini__row{
+  gap:6px;
+  padding:5px 0;
+  font-size:10px;
+}
+
+.home-mobile-mini--leaderboard .home-mobile-mini__row strong{
+  font-size:9px;
 }
 
 .home-mobile__title--portrait span{
