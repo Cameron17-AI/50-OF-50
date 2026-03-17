@@ -124,7 +124,7 @@
   background-repeat: no-repeat;
   background-position: center;
   background-attachment: fixed;
-  filter: saturate(1.32) brightness(1.65) contrast(1.04);
+  filter: saturate(1.32) brightness(1.97) contrast(1.04);
   pointer-events: none;
 }
 
