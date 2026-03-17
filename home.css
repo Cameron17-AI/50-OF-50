@@ -636,8 +636,8 @@ code{background:rgba(255,255,255,.08);padding:2px 6px;border-radius:8px}
 
 .home-mobile__hero-grid{
   display:grid;
-  grid-template-columns:minmax(0, 1.28fr) minmax(112px, .86fr);
-  gap:8px;
+  grid-template-columns:minmax(0, 1.08fr) minmax(124px, .92fr);
+  gap:6px;
   align-items:start;
 }
 
@@ -662,9 +662,9 @@ code{background:rgba(255,255,255,.08);padding:2px 6px;border-radius:8px}
 }
 
 .home-mobile__season{
-  margin-bottom:8px;
+  margin-bottom:6px;
   font-family:Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
-  font-size:22px;
+  font-size:20px;
   color:#f3c15d;
   letter-spacing:.04em;
   text-transform:uppercase;
@@ -673,26 +673,27 @@ code{background:rgba(255,255,255,.08);padding:2px 6px;border-radius:8px}
 .home-mobile__title{
   margin:0;
   font-family:Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
-  max-width:7.5ch;
-  font-size:31px;
-  line-height:.9;
+  max-width:6.6ch;
+  font-size:27px;
+  line-height:.86;
   text-transform:uppercase;
 }
 
 .home-mobile__lead-strong{
-  margin:8px 0 5px;
-  font-size:13px;
+  margin:6px 0 4px;
+  max-width:16ch;
+  font-size:11px;
   font-weight:900;
   font-style:italic;
-  line-height:1.15;
+  line-height:1.1;
 }
 
 .home-mobile__lead-copy{
   margin:0;
   color:rgba(242,244,246,.84);
-  max-width:26ch;
-  font-size:11px;
-  line-height:1.34;
+  max-width:20ch;
+  font-size:10px;
+  line-height:1.26;
 }
 
 .home-mobile-mini{
@@ -738,57 +739,93 @@ code{background:rgba(255,255,255,.08);padding:2px 6px;border-radius:8px}
 }
 
 .home-mobile-mini__certificate-frame{
-  width:78%;
+  width:100%;
   margin:0 auto;
   overflow:hidden;
 }
 
 .home-mobile-mini__certificate-sheet{
-  padding:7px 6px;
-  border-radius:10px;
-  background:linear-gradient(180deg, rgba(250,245,231,.98), rgba(235,224,196,.94));
-  color:#24180a;
+  position:relative;
+  padding:8px 6px 9px;
+  border-radius:12px;
+  border:1px solid rgba(243,193,93,.48);
+  background:linear-gradient(180deg, #161616, #0b0b0b);
+  color:#fff;
   text-align:center;
-  box-shadow:0 8px 18px rgba(0,0,0,.18);
+  box-shadow:0 8px 18px rgba(0,0,0,.24);
 }
 
-.home-mobile-mini__certificate-crest{
+.home-mobile-mini__certificate-ring{
+  position:absolute;
+  inset:50% auto auto 50%;
   display:grid;
   place-items:center;
-  width:22px;
-  height:22px;
-  margin:0 auto 3px;
+  width:58px;
+  height:58px;
+  transform:translate(-50%, -36%);
   border-radius:999px;
-  background:linear-gradient(145deg, #d6ae53, #b77a24);
-  color:#1e1307;
+  border:2px solid rgba(233,238,207,.18);
+  color:rgba(233,238,207,.16);
   font-family:Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
-  font-size:11px;
+  font-size:28px;
+  line-height:1;
+  pointer-events:none;
 }
 
-.home-mobile-mini__certificate-title{
+.home-mobile-mini__certificate-brand{
+  position:relative;
+  margin-bottom:2px;
+  color:#f3c15d;
   font-family:Georgia, "Times New Roman", serif;
-  font-size:11px;
+  font-size:9px;
   font-weight:700;
 }
 
+.home-mobile-mini__certificate-title{
+  position:relative;
+  font-family:Georgia, "Times New Roman", serif;
+  font-size:9px;
+  font-weight:700;
+}
+
+.home-mobile-mini__certificate-copy{
+  position:relative;
+  margin-top:4px;
+  color:#f3c15d;
+  font-size:6px;
+  letter-spacing:.04em;
+}
+
 .home-mobile-mini__certificate-name{
+  position:relative;
   margin:4px auto 0;
   width:fit-content;
   padding-bottom:2px;
-  border-bottom:1px solid rgba(36,24,10,.18);
+  border-bottom:1px solid rgba(255,255,255,.22);
   font-family:Georgia, "Times New Roman", serif;
   font-size:11px;
   font-style:italic;
 }
 
 .home-mobile-mini__certificate-stats{
+  position:relative;
   display:flex;
+  flex-wrap:wrap;
   justify-content:center;
-  gap:6px;
+  gap:4px 6px;
   margin-top:5px;
-  color:rgba(36,24,10,.76);
-  font-size:8px;
+  color:rgba(255,255,255,.9);
+  font-size:6px;
   font-weight:700;
+}
+
+.home-mobile-mini__certificate-signoff{
+  position:relative;
+  margin-top:5px;
+  color:#fff;
+  font-family:"Times New Roman", serif;
+  font-size:8px;
+  font-style:italic;
 }
 
 .home-mobile__ticks{
