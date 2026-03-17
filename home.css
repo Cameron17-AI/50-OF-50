@@ -690,8 +690,8 @@ code{background:rgba(255,255,255,.08);padding:2px 6px;border-radius:8px}
   max-width:none;
   display:grid;
   gap:1px;
-  font-size:19px;
-  line-height:.84;
+  font-size:17px;
+  line-height:.86;
 }
 
 .home-mobile__title--portrait span{
