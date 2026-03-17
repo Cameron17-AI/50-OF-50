@@ -608,13 +608,13 @@ code{background:rgba(255,255,255,.08);padding:2px 6px;border-radius:8px}
 }
 
 .home-mobile__watermark--portrait{
-  top:12px;
-  right:-14px;
-  left:auto;
+  top:18px;
+  left:8px;
+  right:auto;
   width:156px;
   height:156px;
   font-size:86px;
-  opacity:.72;
+  opacity:.48;
 }
 
 .home-mobile__watermark--landscape{
@@ -640,13 +640,15 @@ code{background:rgba(255,255,255,.08);padding:2px 6px;border-radius:8px}
 
 .home-mobile__hero-grid{
   display:grid;
-  grid-template-columns:minmax(0, 1.45fr) minmax(110px, .95fr);
+  grid-template-columns:minmax(0, 1.2fr) 104px;
   gap:10px;
   align-items:start;
 }
 
 .home-mobile__hero-copy{
   min-width:0;
+  display:grid;
+  align-content:start;
 }
 
 .home-mobile__hero-side{
@@ -677,6 +679,8 @@ code{background:rgba(255,255,255,.08);padding:2px 6px;border-radius:8px}
   color:#f3c15d;
   letter-spacing:.04em;
   text-transform:uppercase;
+  position:relative;
+  z-index:2;
 }
 
 .home-mobile__title{
@@ -694,6 +698,16 @@ code{background:rgba(255,255,255,.08);padding:2px 6px;border-radius:8px}
   display:block;
   font-size:31px;
   line-height:.92;
+}
+
+.home-mobile-mini--certificate-inline{
+  margin-top:10px;
+}
+
+.home-mobile-mini--certificate-inline .home-mobile-mini__certificate-frame{
+  width:100%;
+  max-width:178px;
+  margin:0;
 }
 
 .home-mobile__title--portrait span{
