@@ -638,14 +638,14 @@ code{background:rgba(255,255,255,.08);padding:2px 6px;border-radius:8px}
 
 .home-mobile__hero-grid{
   display:grid;
-  grid-template-columns:minmax(0, .86fr) minmax(132px, 1.14fr);
-  gap:8px;
+  grid-template-columns:minmax(0, 1fr) 118px;
+  gap:6px;
   align-items:start;
 }
 
 .home-mobile__hero-copy{
   min-width:0;
-  padding-left:8px;
+  padding-left:6px;
 }
 
 .home-mobile__hero-side{
@@ -684,6 +684,18 @@ code{background:rgba(255,255,255,.08);padding:2px 6px;border-radius:8px}
   font-size:21px;
   line-height:.82;
   text-transform:uppercase;
+}
+
+.home-mobile__title--portrait{
+  max-width:none;
+  display:grid;
+  gap:1px;
+  font-size:19px;
+  line-height:.84;
+}
+
+.home-mobile__title--portrait span{
+  display:block;
 }
 
 .home-mobile__lead-strong{
