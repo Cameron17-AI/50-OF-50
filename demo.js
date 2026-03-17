@@ -40,6 +40,20 @@ function scrollActiveDemoIntoView() {
   });
 }
 
+function scrollDemoCompletionIntoView() {
+  const registerPrompt = el('register-prompt');
+  const registerPromptButton = el('registerPromptBtn');
+  const scrollTarget = registerPromptButton || registerPrompt;
+
+  if (!registerPrompt || !scrollTarget) {
+    return;
+  }
+
+  requestAnimationFrame(() => {
+    scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  });
+}
+
 function playVideoWhenReady(videoEl) {
   if (!videoEl) return;
 
@@ -215,6 +229,7 @@ function finish() {
     el("finish").classList.add("hidden");
     el("register-prompt").classList.remove("hidden");
     updateDemoCompletionPrompt().catch(() => {});
+    scrollDemoCompletionIntoView();
   }, 2000);
 }
 
