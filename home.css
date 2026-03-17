@@ -673,9 +673,9 @@ code{background:rgba(255,255,255,.08);padding:2px 6px;border-radius:8px}
 .home-mobile__title{
   margin:0;
   font-family:Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
-  max-width:6.6ch;
-  font-size:27px;
-  line-height:.86;
+  max-width:5.9ch;
+  font-size:24px;
+  line-height:.84;
   text-transform:uppercase;
 }
 
@@ -688,12 +688,19 @@ code{background:rgba(255,255,255,.08);padding:2px 6px;border-radius:8px}
   line-height:1.1;
 }
 
+.home-mobile__lead-strong--full{
+  margin:8px 0 0;
+  max-width:none;
+  font-size:12px;
+  line-height:1.15;
+}
+
 .home-mobile__lead-copy{
   margin:0;
   color:rgba(242,244,246,.84);
-  max-width:20ch;
+  max-width:15ch;
   font-size:10px;
-  line-height:1.26;
+  line-height:1.22;
 }
 
 .home-mobile-mini{
