@@ -1,5 +1,5 @@
 [
   { "id": 1, "name": "Push-ups", "reps": 50, "description": "Chest lowers under control. Full lockout at top.", "lockTime": 0, "video": "assets/videos/no.1pushup.mp4" },
   { "id": 10, "name": "Mountain climbers", "reps": 50, "description": "25 reps per side. Knee drives toward chest under control.", "lockTime": 0, "video": "assets/videos/no.10mountainclimbers.mp4" },
-  { "id": 48, "name": "Jump squats", "reps": 50, "description": "Explosive jump. Land softly. Full extension at top.", "lockTime": 0, "video": "assets/videos/no.48 Jump squats/jump-squats.mp4" }
+  { "id": 48, "name": "Jump squats", "reps": 50, "description": "Explosive jump. Land softly. Full extension at top.", "lockTime": 0, "video": "assets/videos/no.48 Jump squats" }
 ]
