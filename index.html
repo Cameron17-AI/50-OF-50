@@ -433,18 +433,11 @@
                 <div class="homeproof__eyebrow">Finishing certificate preview</div>
                 <div class="homecertificate-preview">
                   <div class="homecertificate-preview__frame">
-                    <object
+                    <canvas
+                      id="homeCertificatePreviewCanvas"
                       class="homecertificate-preview__embed"
-                      data="certificate_sample.pdf#toolbar=0&navpanes=0&scrollbar=0&view=Fit"
-                      type="application/pdf"
                       aria-label="Real finishing certificate preview"
-                    >
-                      <embed
-                        class="homecertificate-preview__embed"
-                        src="certificate_sample.pdf#toolbar=0&navpanes=0&scrollbar=0&view=Fit"
-                        type="application/pdf"
-                      />
-                    </object>
+                    ></canvas>
                   </div>
                 </div>
               </div>
@@ -673,6 +666,73 @@
       <div class="muted">© <span id="year"></span></div>
     </div>
   </footer>
+
+  <script>
+    async function renderHomeCertificatePreview() {
+      const canvas = document.getElementById('homeCertificatePreviewCanvas');
+      if (!canvas) return;
+
+      const fallbackToObjectEmbed = () => {
+        const frame = canvas.parentElement;
+        if (!frame) return;
+
+        const objectEl = document.createElement('object');
+        objectEl.className = 'homecertificate-preview__embed';
+        objectEl.setAttribute('data', 'certificate_sample.pdf#toolbar=0&navpanes=0&scrollbar=0&view=Fit');
+        objectEl.setAttribute('type', 'application/pdf');
+        objectEl.setAttribute('aria-label', 'Real finishing certificate preview');
+
+        frame.innerHTML = '';
+        frame.appendChild(objectEl);
+      };
+
+      try {
+        if (!window.pdfjsLib) {
+          await new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+            script.onload = resolve;
+            script.onerror = reject;
+            document.head.appendChild(script);
+          });
+        }
+
+        if (!window.pdfjsLib) {
+          fallbackToObjectEmbed();
+          return;
+        }
+
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        const loadingTask = window.pdfjsLib.getDocument('certificate_sample.pdf');
+        const pdf = await loadingTask.promise;
+        const page = await pdf.getPage(1);
+
+        const baseViewport = page.getViewport({ scale: 1 });
+        const parentWidth = Math.max(320, canvas.parentElement.clientWidth || 420);
+        const scale = parentWidth / baseViewport.width;
+        const viewport = page.getViewport({ scale });
+
+        const pixelRatio = window.devicePixelRatio || 1;
+        canvas.width = Math.floor(viewport.width * pixelRatio);
+        canvas.height = Math.floor(viewport.height * pixelRatio);
+        canvas.style.width = `${Math.floor(viewport.width)}px`;
+        canvas.style.height = `${Math.floor(viewport.height)}px`;
+
+        const context = canvas.getContext('2d', { alpha: false });
+        context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+
+        await page.render({
+          canvasContext: context,
+          viewport
+        }).promise;
+      } catch (error) {
+        fallbackToObjectEmbed();
+      }
+    }
+
+    renderHomeCertificatePreview();
+  </script>
 
   <script>
     function getChallengeTarget(user) {
