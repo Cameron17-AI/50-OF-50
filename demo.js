@@ -9,6 +9,7 @@ let activeDemoTrackIndex = -1;
 let isDemoMusicMuted = false;
 let isDemoMusicPrimed = false;
 const resolveVideoUrl = window.resolveVideoUrl || ((videoPath) => videoPath || '');
+const resolveDemoAudioUrl = (audioPath) => String(audioPath || '').trim();
 const setVideoElementSource = window.setVideoElementSource || ((videoEl, videoPath) => {
   if (videoEl) {
     videoEl.src = resolveVideoUrl(videoPath);
@@ -91,6 +92,7 @@ function ensureDemoAudioElement() {
 
   demoBackgroundAudio = new Audio();
   demoBackgroundAudio.setAttribute('playsinline', '');
+  demoBackgroundAudio.playsInline = true;
   demoBackgroundAudio.loop = true;
   demoBackgroundAudio.preload = 'auto';
   demoBackgroundAudio.volume = 0.5;
@@ -98,12 +100,28 @@ function ensureDemoAudioElement() {
   return demoBackgroundAudio;
 }
 
+function attemptDemoAudioPlay(audio) {
+  const playPromise = audio.play();
+  if (!playPromise || typeof playPromise.catch !== 'function') {
+    return;
+  }
+
+  playPromise.catch(() => {
+    const retryPlay = () => {
+      audio.play().catch(() => {});
+    };
+
+    audio.addEventListener('canplay', retryPlay, { once: true });
+    audio.addEventListener('canplaythrough', retryPlay, { once: true });
+  });
+}
+
 async function primeDemoMusicPlayback() {
   const audio = ensureDemoAudioElement();
   if (isDemoMusicPrimed) return;
 
   if (!audio.src) {
-    audio.src = resolveVideoUrl(DEMO_MUSIC_TRACKS[0]);
+    audio.src = resolveDemoAudioUrl(DEMO_MUSIC_TRACKS[0]);
   }
 
   const previousMuted = audio.muted;
@@ -158,16 +176,18 @@ function playDemoMusicForMovement(movementIndex) {
   const trackIndex = movementIndex % DEMO_MUSIC_TRACKS.length;
   const nextTrackSrc = DEMO_MUSIC_TRACKS[trackIndex];
   const audio = ensureDemoAudioElement();
+  const resolvedTrackSrc = resolveDemoAudioUrl(nextTrackSrc);
 
   if (activeDemoTrackIndex !== trackIndex || !audio.src.includes(nextTrackSrc)) {
-    audio.src = resolveVideoUrl(nextTrackSrc);
+    audio.pause();
+    audio.src = resolvedTrackSrc;
+    audio.currentTime = 0;
     activeDemoTrackIndex = trackIndex;
   }
 
   audio.muted = isDemoMusicMuted;
   audio.loop = true;
-  audio.load();
-  audio.play().catch(() => {});
+  attemptDemoAudioPlay(audio);
 }
 
 function updateMovementLockState() {
