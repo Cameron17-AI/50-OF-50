@@ -4,12 +4,20 @@ let startTime = null;
 let tick = null;
 let movementStartTime = null;
 let movementLockTimer = null;
+let demoBackgroundAudio = null;
+let activeDemoTrackIndex = -1;
 const resolveVideoUrl = window.resolveVideoUrl || ((videoPath) => videoPath || '');
 const setVideoElementSource = window.setVideoElementSource || ((videoEl, videoPath) => {
   if (videoEl) {
     videoEl.src = resolveVideoUrl(videoPath);
   }
 });
+
+const DEMO_MUSIC_TRACKS = [
+  "assets/audio/demo-movement-1.mp3",
+  "assets/audio/demo-movement-2.mp3",
+  "assets/audio/demo-movement-3.mp3"
+];
 
 const el = (id) => document.getElementById(id);
 
@@ -76,6 +84,40 @@ function playVideoWhenReady(videoEl) {
   videoEl.addEventListener('loadeddata', attemptPlayback, { once: true });
 }
 
+function ensureDemoAudioElement() {
+  if (demoBackgroundAudio) return demoBackgroundAudio;
+
+  demoBackgroundAudio = new Audio();
+  demoBackgroundAudio.loop = true;
+  demoBackgroundAudio.preload = 'auto';
+  demoBackgroundAudio.volume = 0.5;
+  return demoBackgroundAudio;
+}
+
+function stopDemoMusic() {
+  if (!demoBackgroundAudio) {
+    activeDemoTrackIndex = -1;
+    return;
+  }
+
+  demoBackgroundAudio.pause();
+  demoBackgroundAudio.currentTime = 0;
+  activeDemoTrackIndex = -1;
+}
+
+function playDemoMusicForMovement(movementIndex) {
+  const trackIndex = movementIndex % DEMO_MUSIC_TRACKS.length;
+  const nextTrackSrc = DEMO_MUSIC_TRACKS[trackIndex];
+  const audio = ensureDemoAudioElement();
+
+  if (activeDemoTrackIndex !== trackIndex || !audio.src.includes(nextTrackSrc)) {
+    audio.src = resolveVideoUrl(nextTrackSrc);
+    activeDemoTrackIndex = trackIndex;
+  }
+
+  audio.play().catch(() => {});
+}
+
 function updateMovementLockState() {
   const m = challenge[idx];
   const lockTimeSeconds = m.lockTime || 0;
@@ -123,6 +165,8 @@ function renderMovement() {
     videoEl.src = "";
   }
 
+  playDemoMusicForMovement(idx);
+
   // Initialize movement timer for lock state
   movementStartTime = Date.now();
   
@@ -149,6 +193,7 @@ function stopTimer() {
 function resetUI() {
   stopTimer();
   if (movementLockTimer) clearInterval(movementLockTimer);
+  stopDemoMusic();
   idx = 0;
   startTime = null;
   movementStartTime = null;
@@ -217,6 +262,7 @@ async function updateDemoCompletionPrompt() {
 function finish() {
   stopTimer();
   if (movementLockTimer) clearInterval(movementLockTimer);
+  stopDemoMusic();
   const total = Date.now() - startTime;
   
   // Show finish message and redirect to register prompt
