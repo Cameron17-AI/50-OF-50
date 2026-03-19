@@ -169,10 +169,35 @@ function updateMusicToggleButton() {
   musicToggleBtn.textContent = isDemoMusicMuted ? "Music: Off" : "Music: On";
 }
 
+async function forceStartDemoMusicFromGesture() {
+  const audio = ensureDemoAudioElement();
+  const movementIndex = Math.min(Math.max(idx, 0), DEMO_MUSIC_TRACKS.length - 1);
+  const trackSrc = resolveDemoAudioUrl(DEMO_MUSIC_TRACKS[movementIndex]);
+
+  if (!audio.src || !audio.src.includes(DEMO_MUSIC_TRACKS[movementIndex])) {
+    audio.src = trackSrc;
+    audio.currentTime = 0;
+    activeDemoTrackIndex = movementIndex;
+  }
+
+  isDemoMusicMuted = false;
+  audio.muted = false;
+  audio.volume = 0.6;
+
+  try {
+    await audio.play();
+    isDemoMusicBlocked = false;
+    isDemoMusicPrimed = true;
+  } catch (_) {
+    isDemoMusicBlocked = true;
+  }
+
+  updateMusicToggleButton();
+}
+
 function toggleDemoMusic() {
   if (isDemoMusicBlocked && !isDemoMusicMuted) {
-    const movementIndex = Math.min(idx, DEMO_MUSIC_TRACKS.length - 1);
-    playDemoMusicForMovement(Math.max(0, movementIndex));
+    forceStartDemoMusicFromGesture().catch(() => {});
     return;
   }
 
@@ -392,7 +417,8 @@ async function init() {
   updateMusicToggleButton();
   await updateDemoCompletionPrompt();
 
-  el("startBtn").addEventListener("click", () => {
+  el("startBtn").addEventListener("click", async () => {
+    await forceStartDemoMusicFromGesture().catch(() => {});
     primeDemoMusicPlayback().catch(() => {});
     setButtons({ canStart: false, canDone: true, canReset: true });
     startTimer();
@@ -413,6 +439,11 @@ async function init() {
   const musicToggleBtn = el("musicToggleBtn");
   if (musicToggleBtn) {
     musicToggleBtn.addEventListener("click", toggleDemoMusic);
+    musicToggleBtn.addEventListener("touchend", () => {
+      if (isDemoMusicBlocked || isDemoMusicMuted) {
+        forceStartDemoMusicFromGesture().catch(() => {});
+      }
+    }, { passive: true });
   }
 
   document.addEventListener("touchstart", () => {
