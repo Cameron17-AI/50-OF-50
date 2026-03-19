@@ -6,6 +6,7 @@ let movementStartTime = null;
 let movementLockTimer = null;
 let demoBackgroundAudio = null;
 let activeDemoTrackIndex = -1;
+let isDemoMusicMuted = false;
 const resolveVideoUrl = window.resolveVideoUrl || ((videoPath) => videoPath || '');
 const setVideoElementSource = window.setVideoElementSource || ((videoEl, videoPath) => {
   if (videoEl) {
@@ -91,7 +92,27 @@ function ensureDemoAudioElement() {
   demoBackgroundAudio.loop = true;
   demoBackgroundAudio.preload = 'auto';
   demoBackgroundAudio.volume = 0.5;
+  demoBackgroundAudio.muted = isDemoMusicMuted;
   return demoBackgroundAudio;
+}
+
+function updateMusicToggleButton() {
+  const musicToggleBtn = el("musicToggleBtn");
+  if (!musicToggleBtn) return;
+  musicToggleBtn.textContent = isDemoMusicMuted ? "Music: Off" : "Music: On";
+}
+
+function toggleDemoMusic() {
+  isDemoMusicMuted = !isDemoMusicMuted;
+
+  if (demoBackgroundAudio) {
+    demoBackgroundAudio.muted = isDemoMusicMuted;
+    if (!isDemoMusicMuted && startTime && idx < 3) {
+      demoBackgroundAudio.play().catch(() => {});
+    }
+  }
+
+  updateMusicToggleButton();
 }
 
 function stopDemoMusic() {
@@ -115,6 +136,7 @@ function playDemoMusicForMovement(movementIndex) {
     activeDemoTrackIndex = trackIndex;
   }
 
+  audio.muted = isDemoMusicMuted;
   audio.play().catch(() => {});
 }
 
@@ -290,6 +312,7 @@ async function loadChallenge() {
 async function init() {
   await loadChallenge();
   resetUI();
+  updateMusicToggleButton();
   await updateDemoCompletionPrompt();
 
   el("startBtn").addEventListener("click", () => {
@@ -308,6 +331,11 @@ async function init() {
   });
 
   el("resetBtn").addEventListener("click", resetUI);
+
+  const musicToggleBtn = el("musicToggleBtn");
+  if (musicToggleBtn) {
+    musicToggleBtn.addEventListener("click", toggleDemoMusic);
+  }
 }
 
 init().catch((err) => {
