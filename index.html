@@ -445,11 +445,6 @@
                       class="homecertificate-preview__embed homecertificate-preview__embed--tablet"
                       aria-label="Real finishing certificate preview"
                     ></canvas>
-                    <img
-                      id="homeCertificatePreviewImageTablet"
-                      class="homecertificate-preview__image homecertificate-preview__image--tablet"
-                      alt="Real finishing certificate preview"
-                    />
                   </div>
                 </div>
               </div>
@@ -681,23 +676,20 @@
 
   <script>
     async function renderTabletCertificatePreview() {
-      const isTabletLandscape = window.matchMedia('(min-width: 768px) and (max-width: 1366px) and (orientation: landscape) and (pointer: coarse)').matches;
+      const isTablet = window.matchMedia('(min-width: 768px) and (max-width: 1366px) and (pointer: coarse)').matches;
       const frame = document.querySelector('.homecertificate-preview__frame');
       const iframe = frame ? frame.querySelector('iframe.homecertificate-preview__embed') : null;
       const canvas = document.getElementById('homeCertificatePreviewCanvasTablet');
-      const image = document.getElementById('homeCertificatePreviewImageTablet');
-      if (!frame || !iframe || !canvas || !image) return;
+      if (!frame || !iframe || !canvas) return;
 
-      if (!isTabletLandscape) {
+      if (!isTablet) {
         iframe.style.display = 'block';
         canvas.style.display = 'none';
-        image.style.display = 'none';
         return;
       }
 
       iframe.style.display = 'none';
       canvas.style.display = 'none';
-      image.style.display = 'none';
 
       try {
         if (!window.pdfjsLib) {
@@ -736,10 +728,9 @@
         context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
 
         await page.render({ canvasContext: context, viewport }).promise;
-        image.src = canvas.toDataURL('image/png');
-        image.style.display = 'block';
-      } catch (_) {
         canvas.style.display = 'block';
+      } catch (_) {
+        canvas.style.display = 'none';
       }
     }
 
