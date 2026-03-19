@@ -7,6 +7,7 @@ let movementLockTimer = null;
 let demoBackgroundAudio = null;
 let activeDemoTrackIndex = -1;
 let isDemoMusicMuted = false;
+let isDemoMusicPrimed = false;
 const resolveVideoUrl = window.resolveVideoUrl || ((videoPath) => videoPath || '');
 const setVideoElementSource = window.setVideoElementSource || ((videoEl, videoPath) => {
   if (videoEl) {
@@ -89,11 +90,38 @@ function ensureDemoAudioElement() {
   if (demoBackgroundAudio) return demoBackgroundAudio;
 
   demoBackgroundAudio = new Audio();
+  demoBackgroundAudio.setAttribute('playsinline', '');
   demoBackgroundAudio.loop = true;
   demoBackgroundAudio.preload = 'auto';
   demoBackgroundAudio.volume = 0.5;
   demoBackgroundAudio.muted = isDemoMusicMuted;
   return demoBackgroundAudio;
+}
+
+async function primeDemoMusicPlayback() {
+  const audio = ensureDemoAudioElement();
+  if (isDemoMusicPrimed) return;
+
+  if (!audio.src) {
+    audio.src = resolveVideoUrl(DEMO_MUSIC_TRACKS[0]);
+  }
+
+  const previousMuted = audio.muted;
+  const previousVolume = audio.volume;
+
+  audio.muted = true;
+  audio.volume = 0;
+
+  try {
+    await audio.play();
+    audio.pause();
+    audio.currentTime = 0;
+    isDemoMusicPrimed = true;
+  } catch (_) {
+  } finally {
+    audio.muted = isDemoMusicMuted || previousMuted;
+    audio.volume = previousVolume;
+  }
 }
 
 function updateMusicToggleButton() {
@@ -137,6 +165,8 @@ function playDemoMusicForMovement(movementIndex) {
   }
 
   audio.muted = isDemoMusicMuted;
+  audio.loop = true;
+  audio.load();
   audio.play().catch(() => {});
 }
 
@@ -316,6 +346,7 @@ async function init() {
   await updateDemoCompletionPrompt();
 
   el("startBtn").addEventListener("click", () => {
+    primeDemoMusicPlayback().catch(() => {});
     setButtons({ canStart: false, canDone: true, canReset: true });
     startTimer();
     renderMovement();
@@ -336,6 +367,10 @@ async function init() {
   if (musicToggleBtn) {
     musicToggleBtn.addEventListener("click", toggleDemoMusic);
   }
+
+  document.addEventListener("touchstart", () => {
+    primeDemoMusicPlayback().catch(() => {});
+  }, { once: true, passive: true });
 }
 
 init().catch((err) => {

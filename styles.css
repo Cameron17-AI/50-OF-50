@@ -57,6 +57,18 @@ body { font-family: system-ui, Arial, sans-serif; margin: 0; background: #0b0b0b
 	font-weight: 900;
 	letter-spacing: -2px;
 }
+.timer-row {
+	display: block;
+}
+.music-toggle-btn {
+	margin-top: 10px;
+	padding: 10px 14px;
+	border-radius: 10px;
+	font-size: 0.9rem;
+	font-weight: 800;
+	background: #2f2f2f;
+	color: #fff;
+}
 .video-section { background: #161616; border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 12px; width: 100%; align-items: center; }
 .video-counter { font-size: 18px; font-weight: 800; color: #fff; text-align: center; padding: 8px 0; }
 .video-container { width: 100%; max-width: 360px; aspect-ratio: 9 / 16; height: auto; background: #0b0b0b; border-radius: 12px; overflow: hidden; display: flex; align-items: center; justify-content: center; }
@@ -362,5 +374,24 @@ img, video { max-width: 100%; border-radius: 12px; margin-top: 12px; }
 
 	body.runner-page .card {
 		padding-top: 20px;
+	}
+
+	body.runner-page .timer-row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12px;
+	}
+
+	body.runner-page .timer-row .timer {
+		flex: 1 1 auto;
+	}
+
+	body.runner-page #musicToggleBtn {
+		flex: 0 0 auto;
+		margin-top: 0;
+		padding: 10px 12px;
+		min-width: 98px;
+		font-size: 0.86rem;
 	}
 }
