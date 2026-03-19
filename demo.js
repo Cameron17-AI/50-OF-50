@@ -9,6 +9,7 @@ let activeDemoTrackIndex = -1;
 let isDemoMusicMuted = false;
 let isDemoMusicPrimed = false;
 let isDemoMusicBlocked = false;
+let hasDemoMusicFileError = false;
 const resolveVideoUrl = window.resolveVideoUrl || ((videoPath) => videoPath || '');
 const resolveDemoAudioUrl = (audioPath) => String(audioPath || '').trim();
 const setVideoElementSource = window.setVideoElementSource || ((videoEl, videoPath) => {
@@ -99,6 +100,10 @@ function ensureDemoAudioElement() {
   demoBackgroundAudio.preload = 'auto';
   demoBackgroundAudio.volume = 0.5;
   demoBackgroundAudio.muted = isDemoMusicMuted;
+  demoBackgroundAudio.addEventListener('error', () => {
+    hasDemoMusicFileError = true;
+    updateMusicToggleButton();
+  });
   return demoBackgroundAudio;
 }
 
@@ -162,6 +167,10 @@ async function primeDemoMusicPlayback() {
 function updateMusicToggleButton() {
   const musicToggleBtn = el("musicToggleBtn");
   if (!musicToggleBtn) return;
+  if (hasDemoMusicFileError) {
+    musicToggleBtn.textContent = "Music: File Error";
+    return;
+  }
   if (isDemoMusicBlocked && !isDemoMusicMuted) {
     musicToggleBtn.textContent = "Music: Tap to Start";
     return;
@@ -174,11 +183,11 @@ async function forceStartDemoMusicFromGesture() {
   const movementIndex = Math.min(Math.max(idx, 0), DEMO_MUSIC_TRACKS.length - 1);
   const trackSrc = resolveDemoAudioUrl(DEMO_MUSIC_TRACKS[movementIndex]);
 
-  if (!audio.src || !audio.src.includes(DEMO_MUSIC_TRACKS[movementIndex])) {
-    audio.src = trackSrc;
-    audio.currentTime = 0;
-    activeDemoTrackIndex = movementIndex;
-  }
+  audio.src = trackSrc;
+  audio.load();
+  audio.currentTime = 0;
+  activeDemoTrackIndex = movementIndex;
+  hasDemoMusicFileError = false;
 
   isDemoMusicMuted = false;
   audio.muted = false;
@@ -233,8 +242,10 @@ function playDemoMusicForMovement(movementIndex) {
   if (activeDemoTrackIndex !== trackIndex || !audio.src.includes(nextTrackSrc)) {
     audio.pause();
     audio.src = resolvedTrackSrc;
+    audio.load();
     audio.currentTime = 0;
     activeDemoTrackIndex = trackIndex;
+    hasDemoMusicFileError = false;
   }
 
   audio.muted = isDemoMusicMuted;
