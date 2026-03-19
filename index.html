@@ -688,14 +688,14 @@
         return;
       }
 
-      iframe.style.display = 'none';
-      canvas.style.display = 'block';
+      iframe.style.display = 'block';
+      canvas.style.display = 'none';
 
       try {
         if (!window.pdfjsLib) {
           await new Promise((resolve, reject) => {
             const script = document.createElement('script');
-            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+            script.src = 'assets/vendor/pdfjs/pdf.min.js';
             script.onload = resolve;
             script.onerror = reject;
             document.head.appendChild(script);
@@ -703,12 +703,11 @@
         }
 
         if (!window.pdfjsLib) {
-          iframe.style.display = 'block';
           canvas.style.display = 'none';
           return;
         }
 
-        window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'assets/vendor/pdfjs/pdf.worker.min.js';
 
         const pdf = await window.pdfjsLib.getDocument('certificate_sample.pdf').promise;
         const page = await pdf.getPage(1);
@@ -729,6 +728,8 @@
         context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
 
         await page.render({ canvasContext: context, viewport }).promise;
+        iframe.style.display = 'none';
+        canvas.style.display = 'block';
       } catch (_) {
         iframe.style.display = 'block';
         canvas.style.display = 'none';
