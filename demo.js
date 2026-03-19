@@ -8,6 +8,7 @@ let demoBackgroundAudio = null;
 let activeDemoTrackIndex = -1;
 let isDemoMusicMuted = false;
 let isDemoMusicPrimed = false;
+let isDemoMusicBlocked = false;
 const resolveVideoUrl = window.resolveVideoUrl || ((videoPath) => videoPath || '');
 const resolveDemoAudioUrl = (audioPath) => String(audioPath || '').trim();
 const setVideoElementSource = window.setVideoElementSource || ((videoEl, videoPath) => {
@@ -90,8 +91,9 @@ function playVideoWhenReady(videoEl) {
 function ensureDemoAudioElement() {
   if (demoBackgroundAudio) return demoBackgroundAudio;
 
-  demoBackgroundAudio = new Audio();
+  demoBackgroundAudio = el("demoBackgroundAudio") || new Audio();
   demoBackgroundAudio.setAttribute('playsinline', '');
+  demoBackgroundAudio.setAttribute('webkit-playsinline', '');
   demoBackgroundAudio.playsInline = true;
   demoBackgroundAudio.loop = true;
   demoBackgroundAudio.preload = 'auto';
@@ -103,12 +105,25 @@ function ensureDemoAudioElement() {
 function attemptDemoAudioPlay(audio) {
   const playPromise = audio.play();
   if (!playPromise || typeof playPromise.catch !== 'function') {
+    isDemoMusicBlocked = false;
+    updateMusicToggleButton();
     return;
   }
 
+  playPromise.then(() => {
+    isDemoMusicBlocked = false;
+    updateMusicToggleButton();
+  });
+
   playPromise.catch(() => {
+    isDemoMusicBlocked = true;
+    updateMusicToggleButton();
+
     const retryPlay = () => {
-      audio.play().catch(() => {});
+      audio.play().then(() => {
+        isDemoMusicBlocked = false;
+        updateMusicToggleButton();
+      }).catch(() => {});
     };
 
     audio.addEventListener('canplay', retryPlay, { once: true });
@@ -136,25 +151,37 @@ async function primeDemoMusicPlayback() {
     audio.currentTime = 0;
     isDemoMusicPrimed = true;
   } catch (_) {
+    isDemoMusicBlocked = true;
   } finally {
     audio.muted = isDemoMusicMuted || previousMuted;
     audio.volume = previousVolume;
+    updateMusicToggleButton();
   }
 }
 
 function updateMusicToggleButton() {
   const musicToggleBtn = el("musicToggleBtn");
   if (!musicToggleBtn) return;
+  if (isDemoMusicBlocked && !isDemoMusicMuted) {
+    musicToggleBtn.textContent = "Music: Tap to Start";
+    return;
+  }
   musicToggleBtn.textContent = isDemoMusicMuted ? "Music: Off" : "Music: On";
 }
 
 function toggleDemoMusic() {
+  if (isDemoMusicBlocked && !isDemoMusicMuted) {
+    const movementIndex = Math.min(idx, DEMO_MUSIC_TRACKS.length - 1);
+    playDemoMusicForMovement(Math.max(0, movementIndex));
+    return;
+  }
+
   isDemoMusicMuted = !isDemoMusicMuted;
 
   if (demoBackgroundAudio) {
     demoBackgroundAudio.muted = isDemoMusicMuted;
     if (!isDemoMusicMuted && startTime && idx < 3) {
-      demoBackgroundAudio.play().catch(() => {});
+      attemptDemoAudioPlay(demoBackgroundAudio);
     }
   }
 
