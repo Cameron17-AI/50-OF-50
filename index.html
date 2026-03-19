@@ -440,6 +440,11 @@
                       loading="lazy"
                       scrolling="no"
                     ></iframe>
+                    <canvas
+                      id="homeCertificatePreviewCanvasTablet"
+                      class="homecertificate-preview__embed homecertificate-preview__embed--tablet"
+                      aria-label="Real finishing certificate preview"
+                    ></canvas>
                   </div>
                 </div>
               </div>
@@ -668,6 +673,71 @@
       <div class="muted">© <span id="year"></span></div>
     </div>
   </footer>
+
+  <script>
+    async function renderTabletCertificatePreview() {
+      const isTablet = window.matchMedia('(min-width: 768px) and (max-width: 1180px)').matches;
+      const frame = document.querySelector('.homecertificate-preview__frame');
+      const iframe = frame ? frame.querySelector('iframe.homecertificate-preview__embed') : null;
+      const canvas = document.getElementById('homeCertificatePreviewCanvasTablet');
+      if (!frame || !iframe || !canvas) return;
+
+      if (!isTablet) {
+        iframe.style.display = 'block';
+        canvas.style.display = 'none';
+        return;
+      }
+
+      iframe.style.display = 'none';
+      canvas.style.display = 'block';
+
+      try {
+        if (!window.pdfjsLib) {
+          await new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+            script.onload = resolve;
+            script.onerror = reject;
+            document.head.appendChild(script);
+          });
+        }
+
+        if (!window.pdfjsLib) {
+          iframe.style.display = 'block';
+          canvas.style.display = 'none';
+          return;
+        }
+
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        const pdf = await window.pdfjsLib.getDocument('certificate_sample.pdf').promise;
+        const page = await pdf.getPage(1);
+        const baseViewport = page.getViewport({ scale: 1 });
+
+        const availableWidth = Math.max(320, frame.clientWidth || 420);
+        const availableHeight = Math.max(220, frame.clientHeight || 430);
+        const scale = Math.min(availableWidth / baseViewport.width, availableHeight / baseViewport.height);
+        const viewport = page.getViewport({ scale });
+
+        const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.floor(viewport.width * pixelRatio);
+        canvas.height = Math.floor(viewport.height * pixelRatio);
+        canvas.style.width = `${Math.floor(viewport.width)}px`;
+        canvas.style.height = `${Math.floor(viewport.height)}px`;
+
+        const context = canvas.getContext('2d', { alpha: false });
+        context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+
+        await page.render({ canvasContext: context, viewport }).promise;
+      } catch (_) {
+        iframe.style.display = 'block';
+        canvas.style.display = 'none';
+      }
+    }
+
+    renderTabletCertificatePreview();
+    window.addEventListener('resize', renderTabletCertificatePreview);
+  </script>
 
   <script>
     function getChallengeTarget(user) {
