@@ -1499,6 +1499,16 @@ code{background:rgba(255,255,255,.08);padding:2px 6px;border-radius:8px}
   .home-mobile--landscape{display:none}
 }
 
+@media (max-width: 760px) and (orientation: portrait){
+  .home-mobile__content--portrait{
+    padding:20px 16px 24px;
+  }
+
+  .home-mobile__actions{
+    margin-top:20px;
+  }
+}
+
 @media (max-width: 900px) and (orientation: landscape){
   .homefold__bg{
     background-size:cover;
