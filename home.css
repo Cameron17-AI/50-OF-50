@@ -1450,6 +1450,37 @@ code{background:rgba(255,255,255,.08);padding:2px 6px;border-radius:8px}
   }
 }
 
+@media (min-width: 901px) and (max-width: 1180px) and (orientation: portrait){
+  .homefold__grid{
+    grid-template-columns:minmax(0, 1fr) minmax(390px, 420px);
+    gap:24px;
+  }
+
+  .homefold__visual{
+    padding-top:34px;
+    gap:16px;
+  }
+
+  .homeproof{
+    padding:20px;
+    border-radius:22px;
+  }
+
+  .homeproof--leaderboard{width:min(100%, 390px)}
+  .homeproof--review{width:min(100%, 420px)}
+
+  .homeproof__row{
+    padding:13px 0;
+    font-size:15px;
+  }
+
+  .homeproof h2{font-size:28px}
+
+  .homecertificate-preview__embed{
+    height:500px;
+  }
+}
+
 @media (max-width: 900px){
   .topbar{display:none}
   .grid2{grid-template-columns:1fr}
