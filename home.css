@@ -1692,6 +1692,37 @@ code{background:rgba(255,255,255,.08);padding:2px 6px;border-radius:8px}
   }
 }
 
+@media (min-width: 768px) and (max-width: 1366px) and (orientation: portrait) and (pointer: coarse){
+  .homefold__grid{
+    grid-template-columns:minmax(0, 1fr) minmax(420px, 460px);
+    gap:24px;
+  }
+
+  .homefold__visual{
+    padding-top:30px;
+    gap:18px;
+  }
+
+  .homeproof{
+    padding:22px;
+    border-radius:24px;
+  }
+
+  .homeproof--leaderboard{width:min(100%, 420px)}
+  .homeproof--review{width:min(100%, 460px)}
+
+  .homeproof__row{
+    padding:14px 0;
+    font-size:15px;
+  }
+
+  .homeproof h2{font-size:30px}
+
+  .homecertificate-preview__embed{
+    height:520px;
+  }
+}
+
 @media (min-width: 768px) and (max-width: 1366px) and (orientation: landscape) and (pointer: coarse){
   .homecertificate-preview__frame{
     height:320px;
