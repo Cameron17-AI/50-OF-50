@@ -1540,46 +1540,46 @@ code{background:rgba(255,255,255,.08);padding:2px 6px;border-radius:8px}
   }
 }
 
-@media (min-width: 761px) and (max-width: 900px) and (orientation: portrait){
+@media (max-width: 900px) and (orientation: portrait){
   .home-mobile--portrait{display:block}
   .home-mobile--landscape{display:none}
 
   .home-mobile__content--portrait{
-    padding:24px 20px 28px;
+    padding:24px 18px 28px;
   }
 
   .home-mobile__hero-grid{
-    grid-template-columns:minmax(0, 1fr) 220px;
-    gap:16px;
+    grid-template-columns:minmax(0, 1fr) clamp(150px, 28vw, 220px);
+    gap:12px;
   }
 
   .home-mobile__hero-side{
-    gap:14px;
+    gap:10px;
   }
 
   .home-mobile-mini--leaderboard{
     width:100%;
-    padding:12px 12px 10px;
+    padding:10px 10px 9px;
     border-radius:14px;
   }
 
   .home-mobile-mini--leaderboard .home-mobile-mini__eyebrow{
-    margin-bottom:6px;
-    font-size:10px;
+    margin-bottom:5px;
+    font-size:clamp(8px, 1.6vw, 10px);
   }
 
   .home-mobile-mini--leaderboard .home-mobile-mini__row{
-    gap:8px;
-    padding:7px 0;
-    font-size:12px;
+    gap:6px;
+    padding:5px 0;
+    font-size:clamp(10px, 2vw, 12px);
   }
 
   .home-mobile-mini--leaderboard .home-mobile-mini__row strong{
-    font-size:11px;
+    font-size:clamp(9px, 1.8vw, 11px);
   }
 
   .home-mobile-mini--certificate-lowered{
-    margin-top:28px;
+    margin-top:14px;
   }
 
   .home-mobile-mini__certificate-frame{
@@ -1587,42 +1587,42 @@ code{background:rgba(255,255,255,.08);padding:2px 6px;border-radius:8px}
   }
 
   .home-mobile-mini__certificate-sheet{
-    padding:12px 12px 14px;
+    padding:9px 9px 11px;
     border-radius:12px;
   }
 
   .home-mobile-mini__certificate-ring{
-    width:72px;
-    height:72px;
+    width:clamp(52px, 10vw, 72px);
+    height:clamp(52px, 10vw, 72px);
     transform:translate(-50%, -36%);
-    font-size:34px;
+    font-size:clamp(24px, 4.8vw, 34px);
   }
 
   .home-mobile-mini__certificate-brand,
   .home-mobile-mini__certificate-title{
-    font-size:11px;
+    font-size:clamp(8px, 1.8vw, 11px);
   }
 
   .home-mobile-mini__certificate-copy{
-    margin-top:4px;
-    font-size:7px;
+    margin-top:3px;
+    font-size:clamp(5px, 1.2vw, 7px);
   }
 
   .home-mobile-mini__certificate-name{
-    margin-top:6px;
-    padding-bottom:3px;
-    font-size:13px;
+    margin-top:4px;
+    padding-bottom:2px;
+    font-size:clamp(10px, 2.2vw, 13px);
   }
 
   .home-mobile-mini__certificate-stats{
-    gap:4px 6px;
-    margin-top:7px;
-    font-size:7px;
+    gap:3px 5px;
+    margin-top:5px;
+    font-size:clamp(5px, 1.2vw, 7px);
   }
 
   .home-mobile-mini__certificate-signoff{
-    margin-top:8px;
-    font-size:10px;
+    margin-top:6px;
+    font-size:clamp(7px, 1.6vw, 10px);
   }
 }
 
