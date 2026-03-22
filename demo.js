@@ -204,18 +204,38 @@ async function forceStartDemoMusicFromGesture() {
   updateMusicToggleButton();
 }
 
-function toggleDemoMusic() {
-  if (isDemoMusicBlocked && !isDemoMusicMuted) {
-    forceStartDemoMusicFromGesture().catch(() => {});
+async function toggleDemoMusic() {
+  const nextMutedState = !isDemoMusicMuted;
+  isDemoMusicMuted = nextMutedState;
+
+  const audio = ensureDemoAudioElement();
+  audio.muted = isDemoMusicMuted;
+
+  if (isDemoMusicMuted) {
+    isDemoMusicBlocked = false;
+    updateMusicToggleButton();
     return;
   }
 
-  isDemoMusicMuted = !isDemoMusicMuted;
+  if (startTime && idx < 3) {
+    const movementIndex = Math.min(Math.max(idx, 0), DEMO_MUSIC_TRACKS.length - 1);
+    const expectedTrackSrc = resolveDemoAudioUrl(DEMO_MUSIC_TRACKS[movementIndex]);
 
-  if (demoBackgroundAudio) {
-    demoBackgroundAudio.muted = isDemoMusicMuted;
-    if (!isDemoMusicMuted && startTime && idx < 3) {
-      attemptDemoAudioPlay(demoBackgroundAudio);
+    if (activeDemoTrackIndex !== movementIndex || !audio.src.includes(expectedTrackSrc)) {
+      audio.pause();
+      audio.src = expectedTrackSrc;
+      audio.load();
+      audio.currentTime = 0;
+      activeDemoTrackIndex = movementIndex;
+      hasDemoMusicFileError = false;
+    }
+
+    try {
+      await audio.play();
+      isDemoMusicBlocked = false;
+      isDemoMusicPrimed = true;
+    } catch (_) {
+      isDemoMusicBlocked = true;
     }
   }
 
@@ -449,12 +469,9 @@ async function init() {
 
   const musicToggleBtn = el("musicToggleBtn");
   if (musicToggleBtn) {
-    musicToggleBtn.addEventListener("click", toggleDemoMusic);
-    musicToggleBtn.addEventListener("touchend", () => {
-      if (isDemoMusicBlocked || isDemoMusicMuted) {
-        forceStartDemoMusicFromGesture().catch(() => {});
-      }
-    }, { passive: true });
+    musicToggleBtn.addEventListener("click", () => {
+      toggleDemoMusic().catch(() => {});
+    });
   }
 
   document.addEventListener("touchstart", () => {
