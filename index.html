@@ -134,9 +134,18 @@
           <span class="promo-banner__eyebrow">Limited time offer</span>
           <strong>Take $50 off before the clock runs out.</strong>
           Was $65, now only $15 until midnight June 17.
-          <span class="promo-banner__urgency">Get in before this 50th birthday deal disappears!</span>
+          <span class="promo-banner__urgency" id="promoBannerUrgency">Get in before this 50th birthday deal disappears!</span>
         </p>
-        <a class="btn promo-banner__cta" href="signin.html">Claim the $15 entry</a>
+        <div class="promo-banner__countdown" aria-live="polite" aria-atomic="true">
+          <span class="promo-banner__countdown-label">Offer ends in</span>
+          <div class="promo-banner__countdown-grid" id="promoCountdown" role="timer">
+            <span class="promo-banner__countdown-unit"><strong data-countdown-days>00</strong><em>Days</em></span>
+            <span class="promo-banner__countdown-unit"><strong data-countdown-hours>00</strong><em>Hours</em></span>
+            <span class="promo-banner__countdown-unit"><strong data-countdown-minutes>00</strong><em>Minutes</em></span>
+            <span class="promo-banner__countdown-unit"><strong data-countdown-seconds>00</strong><em>Seconds</em></span>
+          </div>
+        </div>
+        <a class="btn promo-banner__cta" id="promoBannerCta" href="signin.html">Claim the $15 entry</a>
       </div>
     </section>
 
@@ -751,6 +760,81 @@
   </script>
 
   <script>
+    function startPromoCountdown() {
+      const countdownEl = document.getElementById('promoCountdown');
+      if (!countdownEl) return;
+
+      const daysEl = countdownEl.querySelector('[data-countdown-days]');
+      const hoursEl = countdownEl.querySelector('[data-countdown-hours]');
+      const minutesEl = countdownEl.querySelector('[data-countdown-minutes]');
+      const secondsEl = countdownEl.querySelector('[data-countdown-seconds]');
+      const labelEl = document.querySelector('.promo-banner__countdown-label');
+      const urgencyEl = document.getElementById('promoBannerUrgency');
+      const ctaEl = document.getElementById('promoBannerCta');
+      const deadline = new Date('2026-06-18T00:00:00+10:00').getTime();
+
+      if (!daysEl || !hoursEl || !minutesEl || !secondsEl || !labelEl || !urgencyEl || !ctaEl || Number.isNaN(deadline)) return;
+
+      function updatePromoState(remainingMs) {
+        if (remainingMs <= 0) {
+          labelEl.textContent = 'Offer expired';
+          urgencyEl.textContent = 'This birthday deal has ended.';
+          ctaEl.textContent = 'See challenge entry options';
+          return;
+        }
+
+        if (remainingMs <= 86400000) {
+          labelEl.textContent = 'Ends tonight';
+          urgencyEl.textContent = 'Final hours. Lock in the $15 entry before midnight AEST.';
+          ctaEl.textContent = 'Claim before midnight';
+          return;
+        }
+
+        labelEl.textContent = 'Offer ends in';
+        urgencyEl.textContent = 'Get in before this 50th birthday deal disappears!';
+        ctaEl.textContent = 'Claim the $15 entry';
+      }
+
+      function setCountdownValue(element, value) {
+        element.textContent = String(value).padStart(2, '0');
+      }
+
+      function renderCountdown() {
+        const now = Date.now();
+        const remaining = deadline - now;
+        updatePromoState(remaining);
+
+        if (remaining <= 0) {
+          setCountdownValue(daysEl, 0);
+          setCountdownValue(hoursEl, 0);
+          setCountdownValue(minutesEl, 0);
+          setCountdownValue(secondsEl, 0);
+          return true;
+        }
+
+        const totalSeconds = Math.floor(remaining / 1000);
+        const days = Math.floor(totalSeconds / 86400);
+        const hours = Math.floor((totalSeconds % 86400) / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+
+        setCountdownValue(daysEl, days);
+        setCountdownValue(hoursEl, hours);
+        setCountdownValue(minutesEl, minutes);
+        setCountdownValue(secondsEl, seconds);
+        return false;
+      }
+
+      const expired = renderCountdown();
+      if (expired) return;
+
+      const timerId = window.setInterval(() => {
+        if (renderCountdown()) {
+          window.clearInterval(timerId);
+        }
+      }, 1000);
+    }
+
     function getChallengeTarget(user) {
       return user ? window.authStore.getChallengeEntryPath(user) : 'signin.html';
     }
@@ -870,6 +954,7 @@
     }
 
     updateAuthButtons();
+    startPromoCountdown();
   </script>
 
   <script src="home.js"></script>
