@@ -300,7 +300,9 @@ code{background:rgba(255,255,255,.08);padding:2px 6px;border-radius:8px}
 
 .promo-banner__countdown{
   display:grid;
+  flex:1 1 340px;
   gap:8px;
+  min-width:320px;
   padding:10px 12px;
   border:1px solid rgba(18, 12, 5, .12);
   border-radius:16px;
@@ -351,11 +353,16 @@ code{background:rgba(255,255,255,.08);padding:2px 6px;border-radius:8px}
 }
 
 .promo-banner__cta{
-  flex:0 0 auto;
+  flex:0 1 132px;
   border:0;
   background:#120c05;
   color:#fff7ea;
   box-shadow:0 12px 24px rgba(18, 12, 5, .18);
+  padding:10px 12px;
+  font-size:12px;
+  line-height:1.15;
+  text-align:center;
+  white-space:normal;
 }
 
 .promo-banner__cta:hover{
