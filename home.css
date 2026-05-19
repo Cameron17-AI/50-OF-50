@@ -1709,6 +1709,62 @@ code{background:rgba(255,255,255,.08);padding:2px 6px;border-radius:8px}
 }
 
 @media (max-width: 760px) and (orientation: portrait){
+  .promo-banner__inner{
+    gap:10px;
+    padding:10px 14px;
+  }
+
+  .promo-banner__copy{
+    font-size:12px;
+    line-height:1.35;
+  }
+
+  .promo-banner__copy strong{
+    margin:4px 0 2px;
+    font-size:15px;
+  }
+
+  .promo-banner__eyebrow{
+    margin:0 0 4px;
+    padding:4px 8px;
+    font-size:10px;
+  }
+
+  .promo-banner__countdown{
+    gap:6px;
+    padding:8px 10px;
+  }
+
+  .promo-banner__countdown-label{
+    font-size:10px;
+  }
+
+  .promo-banner__countdown-grid{
+    grid-template-columns:repeat(4, minmax(0, 1fr));
+    gap:6px;
+  }
+
+  .promo-banner__countdown-unit{
+    gap:2px;
+    padding:7px 4px 6px;
+    border-radius:10px;
+  }
+
+  .promo-banner__countdown-unit strong{
+    font-size:18px;
+  }
+
+  .promo-banner__countdown-unit em{
+    font-size:8px;
+    letter-spacing:.05em;
+  }
+
+  .promo-banner__cta{
+    min-height:40px;
+    font-size:12px;
+    padding:10px 12px;
+  }
+
   .home-mobile__content--portrait{
     padding:24px 16px 38px;
   }
