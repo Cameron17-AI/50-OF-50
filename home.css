@@ -246,6 +246,88 @@ code{background:rgba(255,255,255,.08);padding:2px 6px;border-radius:8px}
   cursor:pointer;
 }
 
+.promo-banner{
+  position:relative;
+  z-index:18;
+  background:linear-gradient(135deg, #ffe14a 0%, #ff8f1f 48%, #ff4d4d 100%);
+  border-bottom:1px solid rgba(17, 9, 3, .22);
+  box-shadow:0 16px 38px rgba(255, 110, 22, .28);
+  animation:promo-banner-pulse 5.6s cubic-bezier(.4, 0, .2, 1) infinite;
+}
+
+.promo-banner__inner{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+  padding:14px 20px;
+}
+
+.promo-banner__copy{
+  margin:0;
+  color:#1a1107;
+  font-size:15px;
+  font-weight:800;
+  line-height:1.45;
+}
+
+.promo-banner__eyebrow{
+  display:inline-flex;
+  align-items:center;
+  margin-right:10px;
+  padding:5px 9px;
+  border-radius:999px;
+  background:rgba(26, 17, 7, .12);
+  color:#2b1609;
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}
+
+.promo-banner__copy strong{
+  display:inline;
+  font-size:18px;
+  font-weight:900;
+  text-transform:uppercase;
+}
+
+.promo-banner__urgency{
+  color:#fff7ea;
+  text-shadow:0 1px 10px rgba(122, 21, 9, .24);
+}
+
+.promo-banner__cta{
+  flex:0 0 auto;
+  border:0;
+  background:#120c05;
+  color:#fff7ea;
+  box-shadow:0 12px 24px rgba(18, 12, 5, .18);
+}
+
+.promo-banner__cta:hover{
+  background:#231609;
+}
+
+@keyframes promo-banner-pulse{
+  0%,
+  100%{
+    box-shadow:0 10px 24px rgba(138, 54, 12, .16);
+    filter:saturate(.84) brightness(.9);
+  }
+
+  52%{
+    box-shadow:0 20px 46px rgba(255, 126, 24, .3);
+    filter:saturate(1.02) brightness(1.01);
+  }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .promo-banner{
+    animation:none;
+  }
+}
+
 .hero--brand{min-height:55vh;background:linear-gradient(135deg, rgba(217,180,143,.12), rgba(100,160,255,.12))}
 .hero__brand-inner{display:flex;align-items:center;justify-content:center;padding:80px 0}
 .brand-hero{display:flex;align-items:center;gap:40px;justify-content:center;text-align:center;flex-direction:column}
@@ -1496,6 +1578,37 @@ code{background:rgba(255,255,255,.08);padding:2px 6px;border-radius:8px}
 
 @media (max-width: 760px){
   .homefold__bg{
+
+  .promo-banner{
+    border-bottom:0;
+    box-shadow:0 12px 28px rgba(255, 110, 22, .24);
+  }
+
+  .promo-banner__inner{
+    flex-direction:column;
+    align-items:flex-start;
+    padding:12px 16px;
+  }
+
+  .promo-banner__copy{
+    font-size:13px;
+  }
+
+  .promo-banner__copy strong{
+    display:block;
+    margin:6px 0 4px;
+    font-size:16px;
+    line-height:1.1;
+  }
+
+  .promo-banner__eyebrow{
+    margin:0 0 6px;
+  }
+
+  .promo-banner__cta{
+    width:100%;
+    min-height:46px;
+  }
     background-size:190%;
     background-position:center top;
   }
