@@ -335,6 +335,81 @@ async function calculateRanks(resultId) {
 		ageSexRank
 	};
 }
+
+const historicalBackfillResults = [
+	{
+		email: 'historical-cameron-bolt-2026-06-17@50of50.local',
+		name: 'Cameron Bolt',
+		age: 50,
+		sex: 'male',
+		city: 'Caloundra',
+		finishTime: 6705000,
+		lastIdx: 49,
+		completedAt: '2026-06-17T12:00:00+10:00',
+		source: 'historical-backfill'
+	},
+	{
+		email: 'historical-matt-nowaczyk-2026-06-17@50of50.local',
+		name: 'Matt Nowaczyk',
+		age: 38,
+		sex: 'male',
+		city: 'Beerwah',
+		finishTime: 7298000,
+		lastIdx: 49,
+		completedAt: '2026-06-17T12:05:00+10:00',
+		source: 'historical-backfill'
+	}
+];
+
+async function ensureHistoricalBackfillResults() {
+	for (const result of historicalBackfillResults) {
+		const existing = await dbGet(
+			`SELECT id
+			 FROM challenge_results
+			 WHERE email = ?
+			    OR (
+				name = ?
+				AND age = ?
+				AND sex = ?
+				AND city = ?
+				AND finish_time_ms = ?
+			)`,
+			[result.email, result.name, result.age, result.sex, result.city, result.finishTime]
+		);
+
+		if (existing) continue;
+
+		await dbRun(
+			`INSERT INTO challenge_results (
+				email,
+				name,
+				age,
+				sex,
+				city,
+				finish_time_ms,
+				last_idx,
+				completed_at,
+				source
+			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			[
+				result.email,
+				result.name,
+				result.age,
+				result.sex,
+				result.city,
+				result.finishTime,
+				result.lastIdx,
+				result.completedAt,
+				result.source
+			]
+		);
+	}
+}
+
+ensureHistoricalBackfillResults().catch((error) => {
+	console.error('Failed to ensure historical leaderboard backfill results:', error);
+});
+
 const smtpPort = Number(process.env.SMTP_PORT || 587);
 const transporter = nodemailer.createTransport({
 	host: process.env.SMTP_HOST,
