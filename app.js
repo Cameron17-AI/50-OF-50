@@ -448,7 +448,8 @@ async function finish() {
   allowRunnerPageExit();
   const total = Date.now() - startTime;
   const currentUser = JSON.parse(localStorage.getItem('50of50_currentUser'));
-  const localConsumedAt = new Date().toISOString();
+  const completedAt = new Date().toISOString();
+  const localConsumedAt = completedAt;
 
   if (window.authStore && typeof window.authStore.consumeChallengeAccess === 'function' && currentUser) {
     window.authStore.consumeChallengeAccess(currentUser.id, {
@@ -462,12 +463,13 @@ async function finish() {
   let results = JSON.parse(localStorage.getItem('50of50_results')) || [];
   results.push({
     userId: currentUser.id,
+    email: currentUser.email,
     name: currentUser.name,
     sex: currentUser.sex,
     age: currentUser.age,
     city: currentUser.city,
     finishTime: total,
-    completedAt: new Date().toISOString()
+    completedAt
   });
   localStorage.setItem('50of50_results', JSON.stringify(results));
 
@@ -482,9 +484,21 @@ async function finish() {
 
   // Calculate global rank and ageSexRank (simple: sorted by finishTime)
   const sorted = results.slice().sort((a, b) => a.finishTime - b.finishTime);
-  const globalRank = sorted.findIndex(r => r.userId === currentUser.id) + 1;
+  let globalRank = sorted.findIndex(r => r.userId === currentUser.id) + 1;
   const ageSexSorted = sorted.filter(r => r.sex === currentUser.sex && r.age === currentUser.age);
-  const ageSexRank = ageSexSorted.findIndex(r => r.userId === currentUser.id) + 1;
+  let ageSexRank = ageSexSorted.findIndex(r => r.userId === currentUser.id) + 1;
+
+  const resultPayload = {
+    userId: currentUser.id,
+    email: currentUser.email,
+    name: currentUser.name,
+    age: currentUser.age,
+    sex: currentUser.sex,
+    city: currentUser.city,
+    finishTime: total,
+    lastIdx: 49,
+    completedAt
+  };
 
   try {
     const consumeRes = await fetch(window.authStore.apiUrl('/api/payments/consume-entry'), {
@@ -505,6 +519,28 @@ async function finish() {
     }
   } catch (err) {
     console.error('Could not consume event entry on the server.', err);
+  }
+
+  try {
+  const resultRes = await fetch(window.authStore.apiUrl('/api/results'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(resultPayload)
+  });
+
+  if (resultRes.ok) {
+    const resultData = await resultRes.json();
+    if (Number.isInteger(resultData.globalRank) && resultData.globalRank > 0) {
+    globalRank = resultData.globalRank;
+    }
+    if (Number.isInteger(resultData.ageSexRank) && resultData.ageSexRank > 0) {
+    ageSexRank = resultData.ageSexRank;
+    }
+  } else {
+    console.error('Could not save leaderboard result on the server.');
+  }
+  } catch (err) {
+  console.error('Could not save leaderboard result on the server.', err);
   }
 
   try {

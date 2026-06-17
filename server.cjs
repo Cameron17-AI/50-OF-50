@@ -57,6 +57,15 @@ function dbGet(sql, params = []) {
 	});
 }
 
+function dbAll(sql, params = []) {
+	return new Promise((resolve, reject) => {
+		db.all(sql, params, (err, rows) => {
+			if (err) return reject(err);
+			resolve(rows);
+		});
+	});
+}
+
 function getBaseUrl(req) {
 	return process.env.APP_URL || `${req.protocol}://${req.get('host')}`;
 }
@@ -269,7 +278,63 @@ db.serialize(() => {
 			console.error('Failed to ensure entry_consumed_at column exists:', err.message);
 		}
 	});
+	db.run(`CREATE TABLE IF NOT EXISTS challenge_results (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		user_id TEXT,
+		email TEXT NOT NULL,
+		name TEXT NOT NULL,
+		age INTEGER NOT NULL,
+		sex TEXT NOT NULL,
+		city TEXT,
+		finish_time_ms INTEGER NOT NULL,
+		last_idx INTEGER,
+		completed_at DATETIME NOT NULL,
+		stripe_session_id TEXT UNIQUE,
+		source TEXT DEFAULT 'challenge'
+	)`);
 });
+
+function normalizeResultRow(row) {
+	if (!row) return null;
+	return {
+		id: row.id,
+		userId: row.user_id || null,
+		email: row.email,
+		name: row.name,
+		age: row.age,
+		sex: row.sex,
+		city: row.city || '',
+		finishTime: row.finish_time_ms,
+		lastIdx: typeof row.last_idx === 'number' ? row.last_idx : null,
+		completedAt: row.completed_at,
+		stripeSessionId: row.stripe_session_id || null,
+		source: row.source || 'challenge'
+	};
+}
+
+async function calculateRanks(resultId) {
+	const finishers = await dbAll(
+		`SELECT id, sex, age
+		 FROM challenge_results
+		 WHERE last_idx IS NULL OR last_idx >= 49
+		 ORDER BY finish_time_ms ASC, completed_at ASC, id ASC`
+	);
+
+	const globalRank = finishers.findIndex((result) => result.id === resultId) + 1;
+	const target = finishers.find((result) => result.id === resultId);
+	if (!target) {
+		return { globalRank: 0, ageSexRank: 0 };
+	}
+
+	const ageSexRank = finishers
+		.filter((result) => result.sex === target.sex && result.age === target.age)
+		.findIndex((result) => result.id === resultId) + 1;
+
+	return {
+		globalRank,
+		ageSexRank
+	};
+}
 const smtpPort = Number(process.env.SMTP_PORT || 587);
 const transporter = nodemailer.createTransport({
 	host: process.env.SMTP_HOST,
@@ -487,6 +552,139 @@ app.post('/api/payments/reset-entry', async (req, res) => {
 		});
 	} catch (err) {
 		return res.status(500).json({ error: 'Failed to reset event entry.' });
+	}
+});
+
+app.get('/api/results', async (req, res) => {
+	try {
+		const rows = await dbAll(
+			`SELECT id, user_id, email, name, age, sex, city, finish_time_ms, last_idx, completed_at, stripe_session_id, source
+			 FROM challenge_results
+			 ORDER BY completed_at DESC, id DESC`
+		);
+
+		res.json({ results: rows.map(normalizeResultRow) });
+	} catch (err) {
+		console.error('Failed to fetch challenge results.', err);
+		res.status(500).json({ error: 'Failed to fetch challenge results.' });
+	}
+});
+
+app.post('/api/results', async (req, res) => {
+	const userId = req.body?.userId ? String(req.body.userId) : null;
+	const email = normalizeEmail(req.body?.email);
+	const name = typeof req.body?.name === 'string' ? req.body.name.trim() : '';
+	const age = Number(req.body?.age);
+	const sex = typeof req.body?.sex === 'string' ? req.body.sex.trim().toLowerCase() : '';
+	const city = typeof req.body?.city === 'string' ? req.body.city.trim() : '';
+	const finishTime = Number(req.body?.finishTime);
+	const lastIdx = Number.isInteger(req.body?.lastIdx) ? req.body.lastIdx : 49;
+	const completedAt = typeof req.body?.completedAt === 'string' && req.body.completedAt ? req.body.completedAt : new Date().toISOString();
+	const isAdminRequest = Boolean(req.headers['x-admin-token'] && req.headers['x-admin-token'] === adminSession);
+
+	if (!email || !name || !Number.isInteger(age) || !sex || !Number.isFinite(finishTime)) {
+		return res.status(400).json({ error: 'email, name, age, sex, and finishTime are required.' });
+	}
+
+	if (!isValidEmail(email)) {
+		return res.status(400).json({ error: 'Invalid email format.' });
+	}
+
+	if (!['male', 'female', 'other'].includes(sex)) {
+		return res.status(400).json({ error: 'Invalid sex value.' });
+	}
+
+	if (finishTime < 1000) {
+		return res.status(400).json({ error: 'Invalid finish time.' });
+	}
+
+	try {
+		const payment = await dbGet(
+			`SELECT email, payment_status, stripe_session_id, entry_consumed_at
+			 FROM challenge_payments
+			 WHERE email = ?`,
+			[email]
+		);
+
+		if (!isAdminRequest && !isLocalRequest(req)) {
+			if (!payment || payment.payment_status !== 'paid' || !payment.entry_consumed_at) {
+				return res.status(403).json({ error: 'A consumed paid entry is required before saving a leaderboard result.' });
+			}
+		}
+
+		let savedRow;
+		const stripeSessionId = payment?.stripe_session_id || null;
+
+		if (stripeSessionId) {
+			await dbRun(
+				`INSERT INTO challenge_results (
+					user_id,
+					email,
+					name,
+					age,
+					sex,
+					city,
+					finish_time_ms,
+					last_idx,
+					completed_at,
+					stripe_session_id,
+					source
+				) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+				ON CONFLICT(stripe_session_id) DO UPDATE SET
+					user_id = excluded.user_id,
+					email = excluded.email,
+					name = excluded.name,
+					age = excluded.age,
+					sex = excluded.sex,
+					city = excluded.city,
+					finish_time_ms = excluded.finish_time_ms,
+					last_idx = excluded.last_idx,
+					completed_at = excluded.completed_at,
+					source = excluded.source`,
+				[userId, email, name, age, sex, city, Math.round(finishTime), lastIdx, completedAt, stripeSessionId, 'challenge']
+			);
+
+			savedRow = await dbGet(
+				`SELECT id, user_id, email, name, age, sex, city, finish_time_ms, last_idx, completed_at, stripe_session_id, source
+				 FROM challenge_results
+				 WHERE stripe_session_id = ?`,
+				[stripeSessionId]
+			);
+		} else {
+			const insertResult = await dbRun(
+				`INSERT INTO challenge_results (
+					user_id,
+					email,
+					name,
+					age,
+					sex,
+					city,
+					finish_time_ms,
+					last_idx,
+					completed_at,
+					source
+				) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+				[userId, email, name, age, sex, city, Math.round(finishTime), lastIdx, completedAt, isAdminRequest ? 'admin-backfill' : 'challenge']
+			);
+
+			savedRow = await dbGet(
+				`SELECT id, user_id, email, name, age, sex, city, finish_time_ms, last_idx, completed_at, stripe_session_id, source
+				 FROM challenge_results
+				 WHERE id = ?`,
+				[insertResult.lastID]
+			);
+		}
+
+		const ranks = await calculateRanks(savedRow.id);
+		res.json({
+			success: true,
+			result: normalizeResultRow(savedRow),
+			globalRank: ranks.globalRank,
+			ageSexRank: ranks.ageSexRank
+		});
+	} catch (err) {
+		console.error('Failed to save challenge result.', err);
+		res.status(500).json({ error: 'Failed to save challenge result.' });
 	}
 });
 app.post('/api/contact', async (req, res) => {

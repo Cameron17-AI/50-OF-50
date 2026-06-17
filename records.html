@@ -396,14 +396,32 @@
       return HIDDEN_RECORD_NAMES.has(record.name);
     }
 
+    let sharedResults = [];
+    let sharedResultsLoaded = false;
+
+    async function loadSharedResults() {
+      try {
+        const response = await fetch(window.authStore.apiUrl('/api/results'));
+        if (!response.ok) throw new Error('Failed to fetch shared results.');
+
+        const data = await response.json();
+        sharedResults = Array.isArray(data.results) ? data.results : [];
+        sharedResultsLoaded = true;
+      } catch (error) {
+        sharedResults = [];
+        sharedResultsLoaded = false;
+      }
+    }
+
     function updateTable() {
       const sexFilter = document.getElementById('sexFilter').value;
       const ageFilter = document.getElementById('ageFilter').value;
       const currentUser = window.authStore.getCurrentUser();
       const storedResults = JSON.parse(localStorage.getItem('50of50_results')) || [];
+      const officialResults = sharedResultsLoaded ? sharedResults : storedResults;
       const results = buildSampleResults()
         .filter(record => !isRemovedSampleRecord(record) && !isHiddenRecord(record))
-        .concat(storedResults.filter(record => !isHiddenRecord(record)));
+        .concat(officialResults.filter(record => !isHiddenRecord(record)));
 
       let filtered = results.filter(r => {
         if (sexFilter && r.sex !== sexFilter) return false;
@@ -470,6 +488,7 @@
         window.location.href = liveUser ? window.authStore.getChallengeEntryPath(liveUser) : 'signin.html';
       };
 
+      await loadSharedResults();
       updateTable();
     }
 
