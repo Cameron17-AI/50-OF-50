@@ -211,9 +211,9 @@
               </a>
 
               <div class="home-mobile__actions-row">
-                <a class="btn btn--primary home-mobile__btn" id="mobilePortraitChallengeBtn" href="signin.html">Unlock Challenge</a>
-                <a class="btn btn--ghost home-mobile__btn" href="movements.html">See Movements</a>
-                <a class="btn btn--accent home-mobile__btn" href="records.html">Global Records</a>
+                <a class="btn btn--challenge home-mobile__btn" id="mobilePortraitChallengeBtn" href="signin.html">Unlock Challenge</a>
+                <a class="btn btn--ghost home-mobile__btn" href="movements.html">Movements</a>
+                <a class="btn btn--accent home-mobile__btn" href="records.html">Leaderboard</a>
               </div>
             </div>
 
@@ -274,6 +274,7 @@
                   <span>Under 2 mins</span>
                 </a>
                 <div class="home-mobile-landscape__actions-row">
+                  <a class="btn btn--challenge home-mobile__btn" id="mobileLandscapeChallengeBtn" href="signin.html">Unlock Challenge</a>
                   <a class="btn btn--ghost home-mobile__btn" href="movements.html">Movements</a>
                   <a class="btn btn--accent home-mobile__btn" href="records.html">Leaderboard</a>
                 </div>
@@ -385,9 +386,9 @@
                 <span>CHALLENGE DEMO</span>
                 <span>Takes under 2 minutes - No account needed</span>
               </a>
-              <a class="btn btn--primary homefold__btn homefold__btn--third" id="heroRunnerBtn" href="signin.html">Unlock Challenge</a>
-              <a class="btn btn--ghost homefold__btn homefold__btn--third" href="movements.html">See Movements</a>
-              <a class="btn btn--accent homefold__btn homefold__btn--third" href="records.html">Global Records</a>
+              <a class="btn btn--challenge homefold__btn homefold__btn--third" id="heroRunnerBtn" href="signin.html">Unlock Challenge</a>
+              <a class="btn btn--ghost homefold__btn homefold__btn--third" href="movements.html">Movements</a>
+              <a class="btn btn--accent homefold__btn homefold__btn--third" href="records.html">Leaderboard</a>
             </div>
 
             <p class="homefold__demo-note">Start the Challenge Demo to give you a sample of the real 50 challenge.</p>
@@ -759,6 +760,7 @@
       const mobilePortraitChallengeBtn = document.getElementById('mobilePortraitChallengeBtn');
       const mobilePortraitEntryChallengeLink = document.getElementById('mobilePortraitEntryChallengeLink');
       const mobileLandscapeHeaderChallengeBtn = document.getElementById('mobileLandscapeHeaderChallengeBtn');
+      const mobileLandscapeChallengeBtn = document.getElementById('mobileLandscapeChallengeBtn');
       const challengeTarget = getChallengeTarget(currentUser);
       
       if (currentUser) {
@@ -798,6 +800,10 @@
           mobileLandscapeHeaderChallengeBtn.href = challengeTarget;
           mobileLandscapeHeaderChallengeBtn.textContent = hasAccess ? 'Start' : 'Unlock';
         }
+        if (mobileLandscapeChallengeBtn) {
+          mobileLandscapeChallengeBtn.href = challengeTarget;
+          mobileLandscapeChallengeBtn.textContent = hasAccess ? 'Start Challenge' : 'Unlock Challenge';
+        }
         bindChallengeLink(document.getElementById('navChallengeBtn'));
         bindChallengeLink(document.getElementById('mobileChallengeBtn'));
         bindChallengeLink(document.getElementById('mobilePortraitAuthChallengeBtn'));
@@ -807,6 +813,7 @@
         bindChallengeLink(mobilePortraitChallengeBtn);
         bindChallengeLink(mobilePortraitEntryChallengeLink);
         bindChallengeLink(mobileLandscapeHeaderChallengeBtn);
+        bindChallengeLink(mobileLandscapeChallengeBtn);
       } else {
         authButtonsEl.innerHTML = `
           <a class="nav__cta nav__cta--guest" href="signin.html">Sign In</a>
@@ -840,6 +847,10 @@
         if (mobileLandscapeHeaderChallengeBtn) {
           mobileLandscapeHeaderChallengeBtn.href = 'signin.html';
           mobileLandscapeHeaderChallengeBtn.textContent = 'Unlock';
+        }
+        if (mobileLandscapeChallengeBtn) {
+          mobileLandscapeChallengeBtn.href = 'signin.html';
+          mobileLandscapeChallengeBtn.textContent = 'Unlock Challenge';
         }
       }
     }
