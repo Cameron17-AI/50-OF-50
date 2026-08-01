@@ -137,6 +137,79 @@ function isLocalRequest(req) {
 		|| forwardedFor.includes('::1');
 }
 
+function normalizeRankingValue(value) {
+	return typeof value === 'string' ? value.trim() : value;
+}
+
+function compareLeaderboardFinishers(a, b) {
+	if (a.finishTime !== b.finishTime) return a.finishTime - b.finishTime;
+	return String(a.completedAt || '').localeCompare(String(b.completedAt || ''));
+}
+
+function calculateAgeGroup(age) {
+	if (age >= 13 && age <= 17) return '13-17';
+	if (age >= 18 && age <= 24) return '18-24';
+	if (age >= 25 && age <= 34) return '25-34';
+	if (age >= 35 && age <= 44) return '35-44';
+	if (age >= 45 && age <= 54) return '45-54';
+	return '55+';
+}
+
+async function getAllChallengeResults() {
+	const rows = await dbAll(
+		`SELECT
+			id,
+			user_id AS userId,
+			email,
+			name,
+			age,
+			sex,
+			city,
+			finish_time AS finishTime,
+			last_idx AS lastIdx,
+			completed_at AS completedAt,
+			stripe_session_id AS stripeSessionId,
+			source
+		 FROM challenge_results`
+	);
+
+	return rows.map((row) => ({
+		...row,
+		age: Number(row.age),
+		finishTime: Number(row.finishTime),
+		lastIdx: typeof row.lastIdx === 'number' ? row.lastIdx : Number(row.lastIdx)
+	}));
+}
+
+function buildLeaderboard(results) {
+	const finishers = results
+		.filter((result) => typeof result.lastIdx !== 'number' || result.lastIdx >= 49)
+		.sort(compareLeaderboardFinishers);
+	const quitters = results
+		.filter((result) => typeof result.lastIdx === 'number' && result.lastIdx < 49)
+		.sort((a, b) => (b.lastIdx ?? 0) - (a.lastIdx ?? 0) || a.finishTime - b.finishTime);
+	return finishers.concat(quitters);
+}
+
+function getRanksForResult(results, insertedId) {
+	const leaderboard = buildLeaderboard(results);
+	const globalRank = leaderboard.findIndex((result) => result.id === insertedId) + 1;
+	const insertedResult = leaderboard.find((result) => result.id === insertedId);
+	if (!insertedResult) {
+		return { globalRank: 0, ageSexRank: 0 };
+	}
+
+	const ageSexRank = leaderboard
+		.filter((result) => (
+			result.sex === insertedResult.sex
+			&& calculateAgeGroup(result.age) === calculateAgeGroup(insertedResult.age)
+			&& (typeof result.lastIdx !== 'number' || result.lastIdx >= 49)
+		))
+		.findIndex((result) => result.id === insertedId) + 1;
+
+	return { globalRank, ageSexRank };
+}
+
 async function persistChallengePayment(session, accessSource) {
 	const customerEmail = normalizeEmail(
 		session?.customer_details?.email ||
@@ -281,7 +354,7 @@ db.serialize(() => {
 	db.run(`CREATE TABLE IF NOT EXISTS challenge_results (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		user_id TEXT,
-		email TEXT NOT NULL,
+		email TEXT,
 		name TEXT NOT NULL,
 		age INTEGER NOT NULL,
 		sex TEXT NOT NULL,

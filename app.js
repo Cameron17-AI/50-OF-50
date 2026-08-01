@@ -461,7 +461,7 @@ async function finish() {
 
   // Save result
   let results = JSON.parse(localStorage.getItem('50of50_results')) || [];
-  results.push({
+  const localResult = {
     userId: currentUser.id,
     email: currentUser.email,
     name: currentUser.name,
@@ -470,7 +470,8 @@ async function finish() {
     city: currentUser.city,
     finishTime: total,
     completedAt
-  });
+  };
+  results.push(localResult);
   localStorage.setItem('50of50_results', JSON.stringify(results));
 
   // Attempt to send certificate email
@@ -484,10 +485,9 @@ async function finish() {
 
   // Calculate global rank and ageSexRank (simple: sorted by finishTime)
   const sorted = results.slice().sort((a, b) => a.finishTime - b.finishTime);
-  let globalRank = sorted.findIndex(r => r.userId === currentUser.id) + 1;
+  let globalRank = sorted.findIndex(r => r.userId === currentUser.id && r.completedAt === localResult.completedAt) + 1;
   const ageSexSorted = sorted.filter(r => r.sex === currentUser.sex && r.age === currentUser.age);
-  let ageSexRank = ageSexSorted.findIndex(r => r.userId === currentUser.id) + 1;
-
+  let ageSexRank = ageSexSorted.findIndex(r => r.userId === currentUser.id && r.completedAt === localResult.completedAt) + 1;
   const resultPayload = {
     userId: currentUser.id,
     email: currentUser.email,

@@ -208,6 +208,17 @@
       return new Date(ms).toISOString().substr(11, 8);
     }
 
+    function compareFinishers(a, b) {
+      if (a.finishTime !== b.finishTime) return a.finishTime - b.finishTime;
+      return String(a.completedAt || '').localeCompare(String(b.completedAt || ''));
+    }
+
+    function compareLeaderboardRecords(a, b) {
+      const sampleDifference = Number(Boolean(a.isSample)) - Number(Boolean(b.isSample));
+      if (sampleDifference !== 0) return sampleDifference;
+      return compareFinishers(a, b);
+    }
+
     const HIDDEN_RANKINGS = new Set([59, 61, 62, 63, 65, 69, 72, 75, 77, 80, 85]);
     const HIDDEN_RECORD_NAMES = new Set();
     const REMOVED_SAMPLE_RECORDS = [
@@ -222,6 +233,32 @@
     ];
 
     function buildSampleResults() {
+      const featuredEntries = [
+        {
+          userId: 'sample-featured-1',
+          name: 'Cameron Bolt',
+          sex: 'male',
+          age: 50,
+          city: 'Caloundra',
+          finishTime: ((1 * 60) + 51) * 60 * 1000 + 45 * 1000,
+          completedAt: '2026-06-17T12:00:00+10:00',
+          lastIdx: 49,
+          isSample: false,
+          source: 'historical-backfill'
+        },
+        {
+          userId: 'sample-featured-2',
+          name: 'Matt Nowaczyk',
+          sex: 'male',
+          age: 38,
+          city: 'Beerwah',
+          finishTime: ((2 * 60) + 1) * 60 * 1000 + 38 * 1000,
+          completedAt: '2026-06-17T12:05:00+10:00',
+          lastIdx: 49,
+          isSample: false,
+          source: 'historical-backfill'
+        }
+      ];
       const maleNames = [
         'Liam Bennett', 'Noah Castillo', 'Ethan Duarte', 'Mateo Fischer', 'Lucas Haddad', 'Arjun Iqbal', 'Mason Jensen', 'Leo Kovacs',
         'Owen Larsen', 'Elijah Moreau', 'Aiden Novak', 'Daniel Okafor', 'Julian Petrov', 'Isaac Quinn', 'Logan Ribeiro', 'Henry Silva',
@@ -376,6 +413,7 @@
       }
 
       sampleResults.push(...metroEntries);
+      sampleResults.push(...featuredEntries);
 
       return sampleResults;
     }
@@ -396,32 +434,76 @@
       return HIDDEN_RECORD_NAMES.has(record.name);
     }
 
-    let sharedResults = [];
-    let sharedResultsLoaded = false;
-
-    async function loadSharedResults() {
+    function getStoredResults() {
       try {
-        const response = await fetch(window.authStore.apiUrl('/api/results'));
-        if (!response.ok) throw new Error('Failed to fetch shared results.');
-
-        const data = await response.json();
-        sharedResults = Array.isArray(data.results) ? data.results : [];
-        sharedResultsLoaded = true;
+        const parsed = JSON.parse(localStorage.getItem('50of50_results') || '[]');
+        return Array.isArray(parsed) ? parsed : [];
       } catch (error) {
-        sharedResults = [];
-        sharedResultsLoaded = false;
+        return [];
       }
     }
 
-    function updateTable() {
+    function getFallbackResults() {
+      return buildSampleResults()
+        .filter(record => !isRemovedSampleRecord(record) && !isHiddenRecord(record))
+        .concat(getStoredResults().filter(record => !isHiddenRecord(record)));
+    }
+
+    function dedupeResults(results) {
+      const seen = new Set();
+      return results.filter(record => {
+        const key = [
+          record.id || '',
+          record.userId || '',
+          record.email || '',
+          record.name || '',
+          record.finishTime || '',
+          record.completedAt || '',
+          record.city || ''
+        ].join('|');
+
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }
+
+    async function loadResults() {
+      const fallbackResults = getFallbackResults();
+
+      try {
+        const resultsUrl = window.authStore && typeof window.authStore.apiUrl === 'function'
+          ? window.authStore.apiUrl('/api/results')
+          : '/api/results';
+        const response = await fetch(resultsUrl);
+        if (!response.ok) {
+          return { results: fallbackResults, hasApiResults: false };
+        }
+
+        const data = await response.json().catch(() => ({}));
+        const apiResults = Array.isArray(data.results) ? data.results : [];
+        if (apiResults.length === 0) {
+          return { results: fallbackResults, hasApiResults: false };
+        }
+
+        return {
+          results: dedupeResults(
+            apiResults
+              .filter(record => !isHiddenRecord(record))
+              .concat(fallbackResults.filter(record => record.isSample))
+          ),
+          hasApiResults: true
+        };
+      } catch (error) {
+        return { results: fallbackResults, hasApiResults: false };
+      }
+    }
+
+    async function updateTable() {
       const sexFilter = document.getElementById('sexFilter').value;
       const ageFilter = document.getElementById('ageFilter').value;
       const currentUser = window.authStore.getCurrentUser();
-      const storedResults = JSON.parse(localStorage.getItem('50of50_results')) || [];
-      const officialResults = sharedResultsLoaded ? sharedResults : storedResults;
-      const results = buildSampleResults()
-        .filter(record => !isRemovedSampleRecord(record) && !isHiddenRecord(record))
-        .concat(officialResults.filter(record => !isHiddenRecord(record)));
+      const { results, hasApiResults } = await loadResults();
 
       let filtered = results.filter(r => {
         if (sexFilter && r.sex !== sexFilter) return false;
@@ -431,10 +513,16 @@
 
       const finishers = filtered.filter(r => typeof r.lastIdx !== 'number' || r.lastIdx >= 49);
       const quitters = filtered.filter(r => typeof r.lastIdx === 'number' && r.lastIdx < 49);
-      finishers.sort((a, b) => a.finishTime - b.finishTime);
-      quitters.sort((a, b) => (b.lastIdx ?? 0) - (a.lastIdx ?? 0) || a.finishTime - b.finishTime);
+      finishers.sort(compareLeaderboardRecords);
+      quitters.sort((a, b) => {
+        const sampleDifference = Number(Boolean(a.isSample)) - Number(Boolean(b.isSample));
+        if (sampleDifference !== 0) return sampleDifference;
+        return (b.lastIdx ?? 0) - (a.lastIdx ?? 0) || a.finishTime - b.finishTime;
+      });
       filtered = finishers.concat(quitters);
-      filtered = filtered.filter((record, idx) => !HIDDEN_RANKINGS.has(idx + 1));
+      if (!hasApiResults) {
+        filtered = filtered.filter((record, idx) => !HIDDEN_RANKINGS.has(idx + 1));
+      }
 
       const tbody = document.getElementById('recordsBody');
       
@@ -488,8 +576,7 @@
         window.location.href = liveUser ? window.authStore.getChallengeEntryPath(liveUser) : 'signin.html';
       };
 
-      await loadSharedResults();
-      updateTable();
+      await updateTable();
     }
 
     initRecordsPage();
